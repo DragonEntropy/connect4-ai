@@ -1,5 +1,11 @@
 # Link: https://groklearning.com/learn/usyd-comp3308-2024-s1/adv-proj1/5/
 
+def decode(string):
+  rows = string.split(",")
+  grid = list(list(char for char in row) for row in rows) # rows on ouside lists - list of lists
+  return grid
+
+
 def connect_four_mm(contents, turn, max_depth):
     #TODO
     return ''
