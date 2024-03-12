@@ -6,7 +6,9 @@ def UTILITY(state):
 
 def SCORE(state, player):
     # TODO
-    pass
+    if state[0][2] == 'r' and state[0][1] != 'r':
+        return 1
+    return 0
 
 def EVALUATION(state):
     # TODO
@@ -48,6 +50,7 @@ def connect_four_mm(contents, turn, max_depth):
     #   The path along the DFS search
     #   The current recursion depth
     column_stack = list()
+    scores_stack = list(list() for i in range(max_depth))
 
     current_depth = 0
     current_col = 0
@@ -57,16 +60,29 @@ def connect_four_mm(contents, turn, max_depth):
         
         # Case to move back up in the DFS
         if current_col == 7:
+
+            # MIN case
+            if current_depth % 2:
+                scores_stack[current_depth - 1].append(min(scores_stack[current_depth]))
+                scores_stack[current_depth].clear()
+            
+            # MAX case
+            else:
+                scores_stack[current_depth - 1].append(max(scores_stack[current_depth]))
+                scores_stack[current_depth].clear()
+
             current_depth -= 1
             remove_piece(current_state, column_stack[current_depth])
             is_red = not is_red
             current_col = column_stack.pop() + 1
+
 
         # Try to place piece in current column
         elif drop_piece(current_state, current_col, is_red):
 
             # Case where max depth is reached
             if current_depth == max_depth - 1:
+                scores_stack[current_depth].append(SCORE(current_state, turn))
                 print_board(current_state)
                 remove_piece(current_state, current_col)
                 current_col += 1
@@ -80,8 +96,10 @@ def connect_four_mm(contents, turn, max_depth):
         
         print_board(current_state)
 
+    minimax_score = max(scores_stack[0])
+    print(minimax_score)
     return ''
 
 if __name__ == '__main__':
     # Example function call below, you can add your own to test the connect_four_mm function
-    connect_four_mm(".......,.......,.......,.......,.......,.......", "red", 2)
+    connect_four_mm(".......,.......,.......,.......,.......,.......", "red", 3)
