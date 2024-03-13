@@ -25,17 +25,33 @@ def colour_to_char(player):
         print("Invalid player colour: must be yellow or red")
         return
 
+def tokens_in_row(count, player_i):
+    if count == 2:
+        return len_2_count[player_i]
+    elif count == 3:
+        return len_3_count[player_i]
+    elif count == 4:
+        return len_4_count[player_i]
+    else:
+        print("invalid count valid given")
+
+def update_count(adjacent_count, player_i):
+    if adjacent_count == 2:
+        len_2_count[player_i] += 1
+    elif adjacent_count == 3:
+        len_3_count[player_i] += 1
+    elif adjacent_count == 4:
+        len_4_count[player_i] += 1
+    else:
+        print("invalid adjacent count")
+
 def UTILITY(state):
-  # TODO
-  pass
-
-def SCORE(state, player):
-    return players_tokens[]
-
-
-def EVALUATION(state):
-  # TODO
-  pass
+    if tokens_in_row(4, 0): # red: player_i = 0
+        return 10000
+    if tokens_in_row(4, 1): # yellow: player_i = 1
+        return -10000
+    # ELSE: return nothing??
+    return
 
 def NUM_IN_A_ROW(count, state, player):
     # INPUT
@@ -49,18 +65,7 @@ def NUM_IN_A_ROW(count, state, player):
     player_i = player_to_index(player)
 
     if num_in_row_calc:
-        # check stored vals
-        if count == 2:
-            return len_2_count[player_i]
-        elif count == 3:
-            return len_3_count[player_i]
-        elif count == 4:
-            return len_4_count[player_i]
-        else:
-            print("invalid count valid given")
-
-
-        
+        return tokens_in_row(count, player_i)
     
     # ROW TRAVERSALS - note if row has ≤1 token in it then there's no point checking the row/s above it
     for row in range(6):
@@ -72,15 +77,10 @@ def NUM_IN_A_ROW(count, state, player):
                 adjacent_count += 1
                 # use the row traversals to count the total tokens of the play
                 players_tokens[player_i] += 1
-            else: # blank or other players token
+            # blank or other players token
+            else:
                 # record previous tokens in a row
-                if adjacent_count == 2:
-                    len_2_count[player_i] += 2
-                elif adjacent_count == 3:
-                    len_3_count[player_i] += 2
-                elif adjacent_count == 4:
-                    len_4_count[player_i] += 2
-                # TODO: should be consider more cases (Seems like part 1 and 2 don't require it), there probably wouldn't be a point in predicting beyond 4 connected since that'd be the end of the game
+                update_count(adjacent_count, player_i)
                 # reset to 0 tokens in a row
                 adjacent_count = 0
     
@@ -94,12 +94,7 @@ def NUM_IN_A_ROW(count, state, player):
                 adjacent_count += 1
             else:
                 # record previous tokens in a row
-                if adjacent_count == 2:
-                    len_2_count[player_i] += 2
-                elif adjacent_count == 3:
-                    len_3_count[player_i] += 2
-                elif adjacent_count == 4:
-                    len_4_count[player_i] += 2
+                update_count(adjacent_count, player_i)
                 # reset to 0 tokens in a row
                 adjacent_count = 0
     
@@ -114,12 +109,7 @@ def NUM_IN_A_ROW(count, state, player):
                 adjacent_count += 1
             else:
                 # record previous tokens in a row
-                if adjacent_count == 2:
-                    len_2_count[player_i] += 2
-                elif adjacent_count == 3:
-                    len_3_count[player_i] += 2
-                elif adjacent_count == 4:
-                    len_4_count[player_i] += 2
+                update_count(adjacent_count, player_i)
                 # reset to 0 tokens in a row
                 adjacent_count = 0
             # update row and coloumn to continue down the diagonal
@@ -135,12 +125,7 @@ def NUM_IN_A_ROW(count, state, player):
                 adjacent_count += 1
             else:
                 # record previous tokens in a row
-                if adjacent_count == 2:
-                    len_2_count[player_i] += 2
-                elif adjacent_count == 3:
-                    len_3_count[player_i] += 2
-                elif adjacent_count == 4:
-                    len_4_count[player_i] += 2
+                update_count(adjacent_count, player_i)
                 # reset to 0 tokens in a row
                 adjacent_count = 0
             # update row and coloumn to continue down the diagonal
@@ -157,12 +142,7 @@ def NUM_IN_A_ROW(count, state, player):
                 adjacent_count += 1
             else:
                 # record previous tokens in a row
-                if adjacent_count == 2:
-                    len_2_count[player_i] += 2
-                elif adjacent_count == 3:
-                    len_3_count[player_i] += 2
-                elif adjacent_count == 4:
-                    len_4_count[player_i] += 2
+                update_count(adjacent_count, player_i)
                 # reset to 0 tokens in a row
                 adjacent_count = 0
             # update row and coloumn to continue up the diagonal
@@ -177,12 +157,7 @@ def NUM_IN_A_ROW(count, state, player):
                 adjacent_count += 1
             else:
                 # record previous tokens in a row
-                if adjacent_count == 2:
-                    len_2_count[player_i] += 2
-                elif adjacent_count == 3:
-                    len_3_count[player_i] += 2
-                elif adjacent_count == 4:
-                    len_4_count[player_i] += 2
+                update_count(adjacent_count, player_i)
                 # reset to 0 tokens in a row
                 adjacent_count = 0
             # update row and coloumn to continue up the diagonal
@@ -191,34 +166,16 @@ def NUM_IN_A_ROW(count, state, player):
 
     num_in_row_calc = True
 
-    # check stored vals
-    if count == 2:
-        return len_2_count[player_i]
-    elif count == 3:
-        return len_3_count[player_i]
-    elif count == 4:
-        return len_4_count[player_i]
-    else:
-        print("invalid count valid given")
+    # return stored value required
+    return tokens_in_row(count, player_i)
 
 
+def SCORE(state, player):
+    player_i = player_to_index(player)
+    return 10*NUM_IN_A_ROW(2, state, player) + 100*NUM_IN_A_ROW(3, state, player) + 1000*NUM_IN_A_ROW(4, state, player) + players_tokens[player_i]
 
-
-
-
-
-
-
-
-
-            
-
-
-
-
-
-    # # TODO
-    pass 
+def EVALUATION(state):
+  return SCORE(state, "red") - SCORE(state, "yellow")
 
 def decode(string):
   rows = string.split(",")
@@ -231,6 +188,3 @@ def connect_four_mm(contents, turn, max_depth):
 
 if __name__ == '__main__':
   # Example function call below, you can add your own to test the connect_four_mm function
-#   connect_four_mm(".......,.......,.......,.......,.......,.......", "red", 1)
-  connect_four_mm("first..,second.,.......,.......,.......,.......", "red", 1)
-  NUM_IN_A_ROW(decode("first..,second.,.......,.......,.......,......."))
