@@ -1,14 +1,37 @@
 # Link: https://groklearning.com/learn/usyd-comp3308-2024-s1/adv-proj1/5/
 
-in_rows_calulated = False
+num_in_row_calc = False
+# for the given state:
+len_2_count = [0, 0]  # [red, yellow]
+len_3_count = [0, 0]
+len_4_count = [0, 0]
+players_tokens = [0, 0]
+
+def player_to_index(player):
+    if player == "red":
+        return 0
+    elif player == "yellow":
+        return 1
+    else:
+        print("Invalid player colour: must be yellow or red")
+        return
+
+def colour_to_char(player):
+    if player == "red":
+        return 'r'
+    elif player == "yellow":
+        return 'y'
+    else:
+        print("Invalid player colour: must be yellow or red")
+        return
 
 def UTILITY(state):
   # TODO
   pass
 
 def SCORE(state, player):
-  # TODO
-  pass
+    return players_tokens[]
+
 
 def EVALUATION(state):
   # TODO
@@ -17,27 +40,27 @@ def EVALUATION(state):
 def NUM_IN_A_ROW(count, state, player):
     # INPUT
         # state: decode(string): list of lists: state[row][column]
-        # count: int 2, 3, or 4: the number of pieces in a row being counted
+        # count: int 2, 3, or 4: the number of tokens in a row being counted
         # player: "red" or "yellow"
     # OUTPUT
-        # int: number times "player" coloured pieces have "count" pieces in a row
+        # int: number times "player" coloured tokens have "count" tokens in a row
 
-    if in_rows_calulated:
+    token = colour_to_char(player)
+    player_i = player_to_index(player)
+
+    if num_in_row_calc:
         # check stored vals
-        pass
+        if count == 2:
+            return len_2_count[player_i]
+        elif count == 3:
+            return len_3_count[player_i]
+        elif count == 4:
+            return len_4_count[player_i]
+        else:
+            print("invalid count valid given")
 
-    if player == "red":
-        piece = "r"
-    elif player == "yellow":
-        piece = "y"
-    else:
-        piece = ""
-        # throw error
-        pass
 
-    len_2_count = 0
-    len_3_count = 0
-    len_4_count = 0
+        
     
     # ROW TRAVERSALS - note if row has ≤1 token in it then there's no point checking the row/s above it
     for row in range(6):
@@ -45,18 +68,20 @@ def NUM_IN_A_ROW(count, state, player):
         adjacent_count = 0 
         for col in range(7):
             val = state[row][col]
-            if val == piece:
+            if val == token:
                 adjacent_count += 1
-            else: # blank or other players piece
-                # record previous pieces in a row
+                # use the row traversals to count the total tokens of the play
+                players_tokens[player_i] += 1
+            else: # blank or other players token
+                # record previous tokens in a row
                 if adjacent_count == 2:
-                    len_2_count += 2
+                    len_2_count[player_i] += 2
                 elif adjacent_count == 3:
-                    len_3_count += 2
+                    len_3_count[player_i] += 2
                 elif adjacent_count == 4:
-                    len_4_count += 2
+                    len_4_count[player_i] += 2
                 # TODO: should be consider more cases (Seems like part 1 and 2 don't require it), there probably wouldn't be a point in predicting beyond 4 connected since that'd be the end of the game
-                # reset to 0 pieces in a row
+                # reset to 0 tokens in a row
                 adjacent_count = 0
     
     # COLUMN TRAVERSALS 
@@ -65,17 +90,17 @@ def NUM_IN_A_ROW(count, state, player):
         adjacent_count = 0
         for row in range(6):
             val = state[row][col]
-            if val == piece:
+            if val == token:
                 adjacent_count += 1
             else:
-                # record previous pieces in a row
+                # record previous tokens in a row
                 if adjacent_count == 2:
-                    len_2_count += 2
+                    len_2_count[player_i] += 2
                 elif adjacent_count == 3:
-                    len_3_count += 2
+                    len_3_count[player_i] += 2
                 elif adjacent_count == 4:
-                    len_4_count += 2
-                # reset to 0 pieces in a row
+                    len_4_count[player_i] += 2
+                # reset to 0 tokens in a row
                 adjacent_count = 0
     
     # NEGATIVE DIAGONAL TRAVERSALS (negative as in negative gradient) -> decrease row (down) and increase column (right)
@@ -85,17 +110,17 @@ def NUM_IN_A_ROW(count, state, player):
         adjacent_count = 0
         while row >= 0 and col <=6:
             val = state[row][col]
-            if val == piece:
+            if val == token:
                 adjacent_count += 1
             else:
-                # record previous pieces in a row
+                # record previous tokens in a row
                 if adjacent_count == 2:
-                    len_2_count += 2
+                    len_2_count[player_i] += 2
                 elif adjacent_count == 3:
-                    len_3_count += 2
+                    len_3_count[player_i] += 2
                 elif adjacent_count == 4:
-                    len_4_count += 2
-                # reset to 0 pieces in a row
+                    len_4_count[player_i] += 2
+                # reset to 0 tokens in a row
                 adjacent_count = 0
             # update row and coloumn to continue down the diagonal
             col += 1 # right
@@ -104,27 +129,77 @@ def NUM_IN_A_ROW(count, state, player):
     for col in range(1,6):
         row = 5
         adjacent_count = 0
-        while row >= 0 and col <=6:
+        while row >= 0 and col <= 6:
             val = state[row][col]
-            if val == piece:
+            if val == token:
                 adjacent_count += 1
             else:
-                # record previous pieces in a row
+                # record previous tokens in a row
                 if adjacent_count == 2:
-                    len_2_count += 2
+                    len_2_count[player_i] += 2
                 elif adjacent_count == 3:
-                    len_3_count += 2
+                    len_3_count[player_i] += 2
                 elif adjacent_count == 4:
-                    len_4_count += 2
-                # reset to 0 pieces in a row
+                    len_4_count[player_i] += 2
+                # reset to 0 tokens in a row
                 adjacent_count = 0
             # update row and coloumn to continue down the diagonal
             col += 1 # right
             row -= 1 # down
 
     # POSITIVE DIAGONAL TRAVERSALS
-    for col in range()
+    for row in range(0,5):
+        col = 0
+        adjacent_count = 0
+        while row <= 5 and col <= 6:
+            val = state[row][col]
+            if val == token:
+                adjacent_count += 1
+            else:
+                # record previous tokens in a row
+                if adjacent_count == 2:
+                    len_2_count[player_i] += 2
+                elif adjacent_count == 3:
+                    len_3_count[player_i] += 2
+                elif adjacent_count == 4:
+                    len_4_count[player_i] += 2
+                # reset to 0 tokens in a row
+                adjacent_count = 0
+            # update row and coloumn to continue up the diagonal
+            col += 1 # right
+            row += 1 # up
+    for col in range(1, 7):
+        row = 0
+        adjacent_count = 0
+        while row <= 5 and col <= 6:
+            val = state[row][col]
+            if val == token:
+                adjacent_count += 1
+            else:
+                # record previous tokens in a row
+                if adjacent_count == 2:
+                    len_2_count[player_i] += 2
+                elif adjacent_count == 3:
+                    len_3_count[player_i] += 2
+                elif adjacent_count == 4:
+                    len_4_count[player_i] += 2
+                # reset to 0 tokens in a row
+                adjacent_count = 0
+            # update row and coloumn to continue up the diagonal
+            col += 1 # right
+            row += 1 # up
 
+    num_in_row_calc = True
+
+    # check stored vals
+    if count == 2:
+        return len_2_count[player_i]
+    elif count == 3:
+        return len_3_count[player_i]
+    elif count == 4:
+        return len_4_count[player_i]
+    else:
+        print("invalid count valid given")
 
 
 
