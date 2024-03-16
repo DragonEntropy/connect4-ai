@@ -51,10 +51,12 @@ def connect_four_mm(contents, turn, max_depth):
     #   The current recursion depth
     column_stack = list()
     scores_stack = list(list() for i in range(max_depth))
+    best_choice = 0
 
     current_depth = 0
     current_col = 0
     is_red = turn == "red"
+    nodes_examined = 0
 
     while (current_col != 7 or current_depth != 0):
         
@@ -71,6 +73,7 @@ def connect_four_mm(contents, turn, max_depth):
                 scores_stack[current_depth - 1].append(max(scores_stack[current_depth]))
                 scores_stack[current_depth].clear()
 
+            nodes_examined += 1
             current_depth -= 1
             remove_piece(current_state, column_stack[current_depth])
             is_red = not is_red
@@ -83,9 +86,10 @@ def connect_four_mm(contents, turn, max_depth):
             # Case where max depth is reached
             if current_depth == max_depth - 1:
                 scores_stack[current_depth].append(SCORE(current_state, turn))
-                print_board(current_state)
+                # print_board(current_state)
                 remove_piece(current_state, current_col)
                 current_col += 1
+                nodes_examined += 1
 
             # Case to move further down in the DFS
             else:
@@ -93,13 +97,22 @@ def connect_four_mm(contents, turn, max_depth):
                 current_depth += 1
                 current_col = 0
                 is_red = not is_red
+
+        else:
+            current_col += 1
         
         print_board(current_state)
 
-    minimax_score = max(scores_stack[0])
-    print(minimax_score)
-    return ''
+    minimax_score = scores_stack[0][0]
+    minimax_index = 0
+    nodes_examined += 1
+    for i, score in enumerate(scores_stack[0]):
+        if score > minimax_score:
+            minimax_score = score
+            minimax_index = i
+    return f"{minimax_index}\n{nodes_examined}" 
 
 if __name__ == '__main__':
     # Example function call below, you can add your own to test the connect_four_mm function
-    connect_four_mm(".......,.......,.......,.......,.......,.......", "red", 3)
+    result = connect_four_mm("r......,r......,r......,r......,r......,r......", "red", 5)
+    print(result)
