@@ -1,4 +1,5 @@
 # Link: https://groklearning.com/learn/usyd-comp3308-2024-s1/adv-proj1/5/
+import math
 
 num_in_row_calc = False
 
@@ -8,7 +9,7 @@ def player_to_index(player):
     elif player == "yellow":
         return 1
     else:
-        print("Invalid player colour: must be yellow or red")
+        # print("Invalid player colour: must be yellow or red")
         return
 
 def colour_to_char(player):
@@ -17,7 +18,7 @@ def colour_to_char(player):
     elif player == "yellow":
         return 'y'
     else:
-        print("Invalid player colour: must be yellow or red")
+        # print("Invalid player colour: must be yellow or red")
         return
 
 def tokens_in_row(count, player_i, total_counts):
@@ -51,12 +52,14 @@ def NUM_IN_A_ROW(count, state, player):
 
     # for the given state:
 
-    total_counts = {(player_i, length) : 0 for player_i in [0, 1] for length in [1, 2, 3, 4]}
+    global single_counts, num_in_row_calc, total_counts
+    if not num_in_row_calc:
+        single_counts = {player_i : 0 for player_i in [0, 1]}
+        total_counts = {(player_i, length) : 0 for player_i in [0, 1] for length in [2, 3, 4]}
 
     token = colour_to_char(player)
     player_i = player_to_index(player)
 
-    global num_in_row_calc
     if num_in_row_calc:
         return tokens_in_row(count, player_i, total_counts)
     
@@ -69,7 +72,7 @@ def NUM_IN_A_ROW(count, state, player):
             if val == token:
                 adjacent_count += 1
                 # use the row traversals to count the total tokens of the play
-                update_count(1, player_i, total_counts)
+                single_counts[player_i] += 1
             # blank or other players token
             else:
                 # record previous tokens in a row
@@ -158,15 +161,15 @@ def NUM_IN_A_ROW(count, state, player):
             row += 1 # up
 
     num_in_row_calc = True
-    print(total_counts)
+    # print(total_counts)
 
     # return stored value required
     return tokens_in_row(count, player_i, total_counts)
 
 
 def SCORE(state, player):
-    player_i = player_to_index(player)
-    return 10*NUM_IN_A_ROW(2, state, player) + 100*NUM_IN_A_ROW(3, state, player) + 1000*NUM_IN_A_ROW(4, state, player) + NUM_IN_A_ROW(1, state, player)
+    global single_counts
+    return 10*NUM_IN_A_ROW(2, state, player) + 100*NUM_IN_A_ROW(3, state, player) + 1000*NUM_IN_A_ROW(4, state, player) + single_counts[player_to_index(player)]
 
 def EVALUATION(state):
   return SCORE(state, "red") - SCORE(state, "yellow")
@@ -205,7 +208,6 @@ def connect_four_mm(contents, turn, max_depth):
     #   The current recursion depth
     column_stack = list()
     scores_stack = list(list() for i in range(max_depth))
-    best_choice = 0
 
     current_depth = 0
     current_col = 0
@@ -255,19 +257,21 @@ def connect_four_mm(contents, turn, max_depth):
 
         else:
             current_col += 1
+            if current_depth == 0:
+                scores_stack[0].append(-math.inf)
         
         # print_board(current_state)
 
-    minimax_score = scores_stack[0][0]
-    minimax_index = 0
+    minimax_score = -math.inf
+    minimax_index = -1
     nodes_examined += 1
     for i, score in enumerate(scores_stack[0]):
         if score > minimax_score:
             minimax_score = score
             minimax_index = i
-    return f"{minimax_index}\n{nodes_examined}" 
+    return f"{minimax_index}\n{nodes_examined}"
 
 if __name__ == '__main__':
     # Example function call below, you can add your own to test the connect_four_mm function
-    result = connect_four_mm("....r..,....r..,.......,.......,.......,.......", "red", 2)
+    result = connect_four_mm("...yr..,...yr..,...y...,...y...,...y...,...y...", "red", 1)
     print(result)
