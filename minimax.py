@@ -1,11 +1,6 @@
 # Link: https://groklearning.com/learn/usyd-comp3308-2024-s1/adv-proj1/5/
 
 num_in_row_calc = False
-# for the given state:
-len_2_count = [0, 0]  # [red, yellow]
-len_3_count = [0, 0]
-len_4_count = [0, 0]
-players_tokens = [0, 0]
 
 def player_to_index(player):
     if player == "red":
@@ -25,25 +20,17 @@ def colour_to_char(player):
         print("Invalid player colour: must be yellow or red")
         return
 
-def tokens_in_row(count, player_i):
-    if count == 2:
-        return len_2_count[player_i]
-    elif count == 3:
-        return len_3_count[player_i]
-    elif count == 4:
-        return len_4_count[player_i]
-    else:
-        print("invalid count valid given")
+def tokens_in_row(count, player_i, total_counts):
+    try:
+        return total_counts[(player_i, count)]
+    except KeyError:
+        print(f"invalid count valid given: Key {(player_i, count)}")
 
-def update_count(adjacent_count, player_i):
-    if adjacent_count == 2:
-        len_2_count[player_i] += 1
-    elif adjacent_count == 3:
-        len_3_count[player_i] += 1
-    elif adjacent_count == 4:
-        len_4_count[player_i] += 1
-    else:
-        print("invalid adjacent count")
+def update_count(adjacent_count, player_i, total_counts):
+    try:
+        total_counts[(player_i, adjacent_count)] += 1
+    except KeyError:
+        print(f"invalid adjacent count: Key {(player_i, adjacent_count)}")
 
 def UTILITY(state):
     if tokens_in_row(4, 0): # red: player_i = 0
@@ -61,11 +48,16 @@ def NUM_IN_A_ROW(count, state, player):
     # OUTPUT
         # int: number times "player" coloured tokens have "count" tokens in a row
 
+    # for the given state:
+
+    total_counts = {(player_i, length) : 0 for player_i in [0, 1] for length in [1, 2, 3, 4]}
+
     token = colour_to_char(player)
     player_i = player_to_index(player)
 
+    global num_in_row_calc
     if num_in_row_calc:
-        return tokens_in_row(count, player_i)
+        return tokens_in_row(count, player_i, total_counts)
     
     # ROW TRAVERSALS - note if row has ≤1 token in it then there's no point checking the row/s above it
     for row in range(6):
@@ -76,11 +68,11 @@ def NUM_IN_A_ROW(count, state, player):
             if val == token:
                 adjacent_count += 1
                 # use the row traversals to count the total tokens of the play
-                players_tokens[player_i] += 1
+                update_count(1, player_i, total_counts)
             # blank or other players token
             else:
                 # record previous tokens in a row
-                update_count(adjacent_count, player_i)
+                update_count(adjacent_count, player_i, total_counts)
                 # reset to 0 tokens in a row
                 adjacent_count = 0
     
@@ -94,7 +86,7 @@ def NUM_IN_A_ROW(count, state, player):
                 adjacent_count += 1
             else:
                 # record previous tokens in a row
-                update_count(adjacent_count, player_i)
+                update_count(adjacent_count, player_i, total_counts)
                 # reset to 0 tokens in a row
                 adjacent_count = 0
     
@@ -109,7 +101,7 @@ def NUM_IN_A_ROW(count, state, player):
                 adjacent_count += 1
             else:
                 # record previous tokens in a row
-                update_count(adjacent_count, player_i)
+                update_count(adjacent_count, player_i, total_counts)
                 # reset to 0 tokens in a row
                 adjacent_count = 0
             # update row and coloumn to continue down the diagonal
@@ -125,7 +117,7 @@ def NUM_IN_A_ROW(count, state, player):
                 adjacent_count += 1
             else:
                 # record previous tokens in a row
-                update_count(adjacent_count, player_i)
+                update_count(adjacent_count, player_i, total_counts)
                 # reset to 0 tokens in a row
                 adjacent_count = 0
             # update row and coloumn to continue down the diagonal
@@ -142,7 +134,7 @@ def NUM_IN_A_ROW(count, state, player):
                 adjacent_count += 1
             else:
                 # record previous tokens in a row
-                update_count(adjacent_count, player_i)
+                update_count(adjacent_count, player_i, total_counts)
                 # reset to 0 tokens in a row
                 adjacent_count = 0
             # update row and coloumn to continue up the diagonal
@@ -157,7 +149,7 @@ def NUM_IN_A_ROW(count, state, player):
                 adjacent_count += 1
             else:
                 # record previous tokens in a row
-                update_count(adjacent_count, player_i)
+                update_count(adjacent_count, player_i, total_counts)
                 # reset to 0 tokens in a row
                 adjacent_count = 0
             # update row and coloumn to continue up the diagonal
@@ -165,14 +157,15 @@ def NUM_IN_A_ROW(count, state, player):
             row += 1 # up
 
     num_in_row_calc = True
+    print(total_counts)
 
     # return stored value required
-    return tokens_in_row(count, player_i)
+    return tokens_in_row(count, player_i, total_counts)
 
 
 def SCORE(state, player):
     player_i = player_to_index(player)
-    return 10*NUM_IN_A_ROW(2, state, player) + 100*NUM_IN_A_ROW(3, state, player) + 1000*NUM_IN_A_ROW(4, state, player) + players_tokens[player_i]
+    return 10*NUM_IN_A_ROW(2, state, player) + 100*NUM_IN_A_ROW(3, state, player) + 1000*NUM_IN_A_ROW(4, state, player) + NUM_IN_A_ROW(1, state, player)
 
 def EVALUATION(state):
   return SCORE(state, "red") - SCORE(state, "yellow")
@@ -260,7 +253,7 @@ def connect_four_mm(contents, turn, max_depth):
         else:
             current_col += 1
         
-        print_board(current_state)
+        # print_board(current_state)
 
     minimax_score = scores_stack[0][0]
     minimax_index = 0
@@ -273,5 +266,5 @@ def connect_four_mm(contents, turn, max_depth):
 
 if __name__ == '__main__':
     # Example function call below, you can add your own to test the connect_four_mm function
-    result = connect_four_mm("r......,r......,r......,r......,r......,r......", "red", 5)
+    result = connect_four_mm("...r...,...r...,.......,.......,.......,.......", "red", 2)
     print(result)
