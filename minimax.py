@@ -24,13 +24,15 @@ def tokens_in_row(count, player_i, total_counts):
     try:
         return total_counts[(player_i, count)]
     except KeyError:
-        print(f"invalid count valid given: Key {(player_i, count)}")
+        # print(f"invalid count valid given: Key {(player_i, count)}")
+        return
 
 def update_count(adjacent_count, player_i, total_counts):
     try:
         total_counts[(player_i, adjacent_count)] += 1
     except KeyError:
-        print(f"invalid adjacent count: Key {(player_i, adjacent_count)}")
+        # print(f"invalid adjacent count: Key {(player_i, adjacent_count)}")
+        return
 
 def UTILITY(state):
     if tokens_in_row(4, 0): # red: player_i = 0
@@ -38,7 +40,6 @@ def UTILITY(state):
     if tokens_in_row(4, 1): # yellow: player_i = 1
         return -10000
     # ELSE: return nothing??
-    return
 
 def NUM_IN_A_ROW(count, state, player):
     # INPUT
@@ -196,6 +197,7 @@ def remove_piece(state, col):
     return False
 
 def connect_four_mm(contents, turn, max_depth):
+    global num_in_row_calc
     current_state = decode(contents)
 
     # Using a stack to implement recursion. Needs to track:
@@ -237,7 +239,8 @@ def connect_four_mm(contents, turn, max_depth):
 
             # Case where max depth is reached
             if current_depth == max_depth - 1:
-                scores_stack[current_depth].append(SCORE(current_state, turn))
+                scores_stack[current_depth].append((1 if turn == "red" else -1) * EVALUATION(current_state))
+                num_in_row_calc = False
                 # print_board(current_state)
                 remove_piece(current_state, current_col)
                 current_col += 1
@@ -266,5 +269,5 @@ def connect_four_mm(contents, turn, max_depth):
 
 if __name__ == '__main__':
     # Example function call below, you can add your own to test the connect_four_mm function
-    result = connect_four_mm("...r...,...r...,.......,.......,.......,.......", "red", 2)
+    result = connect_four_mm("....r..,....r..,.......,.......,.......,.......", "red", 2)
     print(result)
