@@ -39,7 +39,7 @@ def update_count(adjacent_count, player_i, total_counts):
 
 def UTILITY(state):
     global num_in_row_calc
-    num_in_row_calc = False
+    num_in_row_calc = False # TODO: change to True
 
     if NUM_IN_A_ROW(4, state, 'red'): # red: player_i = 0
         num_in_row_calc = False
@@ -49,6 +49,7 @@ def UTILITY(state):
         return -10000
     # ELSE: return nothing??
 
+# TODO: if a row has no tokens the rows above don't need to be traversed
 def NUM_IN_A_ROW(count, state, player):
     # INPUT
         # state: decode(string): list of lists: state[row][column]
@@ -188,7 +189,6 @@ def NUM_IN_A_ROW(count, state, player):
 
     # return stored value required
     return tokens_in_row(count, player_index, total_counts)
-
 
 def SCORE(state, player):
     global single_counts
