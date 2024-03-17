@@ -53,6 +53,7 @@ def UTILITY(state):
     # ELSE: return nothing??
     return
 
+# TODO: if a row has no tokens the rows above don't need to be traversed
 def NUM_IN_A_ROW(count, state, player):
     # INPUT
         # state: decode(string): list of lists: state[row][column]
