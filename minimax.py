@@ -35,11 +35,15 @@ def update_count(adjacent_count, player_i, total_counts):
         # print(f"invalid adjacent count: Key {(player_i, adjacent_count)}")
         return
 
-def UTILITY():
-    global total_counts
-    if tokens_in_row(4, 0, total_counts): # red: player_i = 0
+def UTILITY(state):
+    global num_in_row_calc
+    num_in_row_calc = False
+
+    if NUM_IN_A_ROW(4, state, 'red'): # red: player_i = 0
+        num_in_row_calc = True
         return 10000
-    if tokens_in_row(4, 1, total_counts): # yellow: player_i = 1
+    if NUM_IN_A_ROW(4, state, 'yellow'): # yellow: player_i = 1
+        num_in_row_calc = True
         return -10000
     # ELSE: return nothing??
 
@@ -58,114 +62,117 @@ def NUM_IN_A_ROW(count, state, player):
         single_counts = {player_i : 0 for player_i in [0, 1]}
         total_counts = {(player_i, length) : 0 for player_i in [0, 1] for length in [2, 3, 4]}
 
-    token = colour_to_char(player)
-    player_i = player_to_index(player)
+    player_index = player_to_index(player)
 
     if num_in_row_calc:
-        return tokens_in_row(count, player_i, total_counts)
+        return tokens_in_row(count, player_index, total_counts)
     
-    # ROW TRAVERSALS - note if row has ≤1 token in it then there's no point checking the row/s above it
-    for row in range(6):
-        # for the current row, iterate across each value in it (so column index)
-        adjacent_count = 0 
-        for col in range(7):
-            val = state[row][col]
-            if val == token:
-                adjacent_count += 1
-                # use the row traversals to count the total tokens of the play
-                single_counts[player_i] += 1
-            # blank or other players token
-            else:
-                # record previous tokens in a row
-                update_count(adjacent_count, player_i, total_counts)
-                # reset to 0 tokens in a row
-                adjacent_count = 0
-    
-    # COLUMN TRAVERSALS 
-    for col in range(7):
-        # for the current coloumn, iterate each row value of the column
-        adjacent_count = 0
-        for row in range(6):
-            val = state[row][col]
-            if val == token:
-                adjacent_count += 1
-            else:
-                # record previous tokens in a row
-                update_count(adjacent_count, player_i, total_counts)
-                # reset to 0 tokens in a row
-                adjacent_count = 0
-    
-    # NEGATIVE DIAGONAL TRAVERSALS (negative as in negative gradient) -> decrease row (down) and increase column (right)
-    # starting col = 0
-    for row in range(1,6):
-        col = 0
-        adjacent_count = 0
-        while row >= 0 and col <=6:
-            val = state[row][col]
-            if val == token:
-                adjacent_count += 1
-            else:
-                # record previous tokens in a row
-                update_count(adjacent_count, player_i, total_counts)
-                # reset to 0 tokens in a row
-                adjacent_count = 0
-            # update row and coloumn to continue down the diagonal
-            col += 1 # right
-            row -= 1 # down
-    # starting row = 5
-    for col in range(1,6):
-        row = 5
-        adjacent_count = 0
-        while row >= 0 and col <= 6:
-            val = state[row][col]
-            if val == token:
-                adjacent_count += 1
-            else:
-                # record previous tokens in a row
-                update_count(adjacent_count, player_i, total_counts)
-                # reset to 0 tokens in a row
-                adjacent_count = 0
-            # update row and coloumn to continue down the diagonal
-            col += 1 # right
-            row -= 1 # down
+    for player in ['red', 'yellow']:
+        player_i = player_to_index(player)
+        token = colour_to_char(player)
 
-    # POSITIVE DIAGONAL TRAVERSALS
-    for row in range(0,5):
-        col = 0
-        adjacent_count = 0
-        while row <= 5 and col <= 6:
-            val = state[row][col]
-            if val == token:
-                adjacent_count += 1
-            else:
-                # record previous tokens in a row
-                update_count(adjacent_count, player_i, total_counts)
-                # reset to 0 tokens in a row
-                adjacent_count = 0
-            # update row and coloumn to continue up the diagonal
-            col += 1 # right
-            row += 1 # up
-    for col in range(1, 7):
-        row = 0
-        adjacent_count = 0
-        while row <= 5 and col <= 6:
-            val = state[row][col]
-            if val == token:
-                adjacent_count += 1
-            else:
-                # record previous tokens in a row
-                update_count(adjacent_count, player_i, total_counts)
-                # reset to 0 tokens in a row
-                adjacent_count = 0
-            # update row and coloumn to continue up the diagonal
-            col += 1 # right
-            row += 1 # up
+        # ROW TRAVERSALS - note if row has ≤1 token in it then there's no point checking the row/s above it
+        for row in range(6):
+            # for the current row, iterate across each value in it (so column index)
+            adjacent_count = 0 
+            for col in range(7):
+                val = state[row][col]
+                if val == token:
+                    adjacent_count += 1
+                    # use the row traversals to count the total tokens of the play
+                    single_counts[player_i] += 1
+                # blank or other players token
+                else:
+                    # record previous tokens in a row
+                    update_count(adjacent_count, player_i, total_counts)
+                    # reset to 0 tokens in a row
+                    adjacent_count = 0
+        
+        # COLUMN TRAVERSALS 
+        for col in range(7):
+            # for the current coloumn, iterate each row value of the column
+            adjacent_count = 0
+            for row in range(6):
+                val = state[row][col]
+                if val == token:
+                    adjacent_count += 1
+                else:
+                    # record previous tokens in a row
+                    update_count(adjacent_count, player_i, total_counts)
+                    # reset to 0 tokens in a row
+                    adjacent_count = 0
+        
+        # NEGATIVE DIAGONAL TRAVERSALS (negative as in negative gradient) -> decrease row (down) and increase column (right)
+        # starting col = 0
+        for row in range(1,6):
+            col = 0
+            adjacent_count = 0
+            while row >= 0 and col <=6:
+                val = state[row][col]
+                if val == token:
+                    adjacent_count += 1
+                else:
+                    # record previous tokens in a row
+                    update_count(adjacent_count, player_i, total_counts)
+                    # reset to 0 tokens in a row
+                    adjacent_count = 0
+                # update row and coloumn to continue down the diagonal
+                col += 1 # right
+                row -= 1 # down
+        # starting row = 5
+        for col in range(1,6):
+            row = 5
+            adjacent_count = 0
+            while row >= 0 and col <= 6:
+                val = state[row][col]
+                if val == token:
+                    adjacent_count += 1
+                else:
+                    # record previous tokens in a row
+                    update_count(adjacent_count, player_i, total_counts)
+                    # reset to 0 tokens in a row
+                    adjacent_count = 0
+                # update row and coloumn to continue down the diagonal
+                col += 1 # right
+                row -= 1 # down
+
+        # POSITIVE DIAGONAL TRAVERSALS
+        for row in range(0,5):
+            col = 0
+            adjacent_count = 0
+            while row <= 5 and col <= 6:
+                val = state[row][col]
+                if val == token:
+                    adjacent_count += 1
+                else:
+                    # record previous tokens in a row
+                    update_count(adjacent_count, player_i, total_counts)
+                    # reset to 0 tokens in a row
+                    adjacent_count = 0
+                # update row and coloumn to continue up the diagonal
+                col += 1 # right
+                row += 1 # up
+        for col in range(1, 7):
+            row = 0
+            adjacent_count = 0
+            while row <= 5 and col <= 6:
+                val = state[row][col]
+                if val == token:
+                    adjacent_count += 1
+                else:
+                    # record previous tokens in a row
+                    update_count(adjacent_count, player_i, total_counts)
+                    # reset to 0 tokens in a row
+                    adjacent_count = 0
+                # update row and coloumn to continue up the diagonal
+                col += 1 # right
+                row += 1 # up
 
     num_in_row_calc = True
     # print(total_counts)
 
     # return stored value required
-    return tokens_in_row(count, player_i, total_counts)
+    return tokens_in_row(count, player_index, total_counts)
 
 
 def SCORE(state, player):
@@ -230,6 +237,7 @@ def connect_four_mm(contents, turn, max_depth):
                 scores_stack[current_depth - 1].append(max(scores_stack[current_depth]))
                 scores_stack[current_depth].clear()
 
+            # print(column_stack, current_col)
             nodes_examined += 1
             current_depth -= 1
             remove_piece(current_state, column_stack[current_depth])
@@ -242,10 +250,11 @@ def connect_four_mm(contents, turn, max_depth):
 
             # Case where max depth is reached terminal is reached
             score = EVALUATION(current_state)
-            if current_depth == max_depth - 1 or UTILITY():
+            if current_depth == max_depth - 1 or UTILITY(current_state):
                 scores_stack[current_depth].append((1 if turn == "red" else -1) * score)
                 # print_board(current_state)
                 remove_piece(current_state, current_col)
+                # print(column_stack, current_col)
                 current_col += 1
                 nodes_examined += 1
 
@@ -276,5 +285,5 @@ def connect_four_mm(contents, turn, max_depth):
 
 if __name__ == '__main__':
     # Example function call below, you can add your own to test the connect_four_mm function
-    result = connect_four_mm("...yr..,...yr..,...yr..,.......,.......,.......", "red", 2)
+    result = connect_four_mm("..y.r..,..y.r..,..y.r..,.......,.......,.......", "red", 3)
     print(result)
