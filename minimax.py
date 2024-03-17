@@ -37,7 +37,7 @@ def update_count(adjacent_count, player_i, total_counts):
 
 def UTILITY(state):
     global num_in_row_calc
-    num_in_row_calc = False
+    num_in_row_calc = False # TODO: change to True
 
     if NUM_IN_A_ROW(4, state, 'red'): # red: player_i = 0
         num_in_row_calc = True
