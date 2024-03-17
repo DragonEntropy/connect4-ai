@@ -35,10 +35,11 @@ def update_count(adjacent_count, player_i, total_counts):
         # print(f"invalid adjacent count: Key {(player_i, adjacent_count)}")
         return
 
-def UTILITY(state):
-    if tokens_in_row(4, 0): # red: player_i = 0
+def UTILITY():
+    global total_counts
+    if tokens_in_row(4, 0, total_counts): # red: player_i = 0
         return 10000
-    if tokens_in_row(4, 1): # yellow: player_i = 1
+    if tokens_in_row(4, 1, total_counts): # yellow: player_i = 1
         return -10000
     # ELSE: return nothing??
 
@@ -239,10 +240,10 @@ def connect_four_mm(contents, turn, max_depth):
         # Try to place piece in current column
         elif drop_piece(current_state, current_col, is_red):
 
-            # Case where max depth is reached
-            if current_depth == max_depth - 1:
-                scores_stack[current_depth].append((1 if turn == "red" else -1) * EVALUATION(current_state))
-                num_in_row_calc = False
+            # Case where max depth is reached terminal is reached
+            score = EVALUATION(current_state)
+            if current_depth == max_depth - 1 or UTILITY():
+                scores_stack[current_depth].append((1 if turn == "red" else -1) * score)
                 # print_board(current_state)
                 remove_piece(current_state, current_col)
                 current_col += 1
@@ -254,6 +255,8 @@ def connect_four_mm(contents, turn, max_depth):
                 current_depth += 1
                 current_col = 0
                 is_red = not is_red
+
+            num_in_row_calc = False
 
         else:
             current_col += 1
@@ -273,5 +276,5 @@ def connect_four_mm(contents, turn, max_depth):
 
 if __name__ == '__main__':
     # Example function call below, you can add your own to test the connect_four_mm function
-    result = connect_four_mm("...yr..,...yr..,...y...,...y...,...y...,...y...", "red", 1)
+    result = connect_four_mm("...yr..,...yr..,...yr..,.......,.......,.......", "red", 2)
     print(result)
