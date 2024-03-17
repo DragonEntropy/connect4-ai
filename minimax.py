@@ -188,7 +188,6 @@ def NUM_IN_A_ROW(count, state, player):
     # return stored value required
     return tokens_in_row(count, player_index, total_counts)
 
-
 def SCORE(state, player):
     global single_counts
     return 10*NUM_IN_A_ROW(2, state, player) + 100*NUM_IN_A_ROW(3, state, player) + 1000*NUM_IN_A_ROW(4, state, player) + single_counts[player_to_index(player)]
