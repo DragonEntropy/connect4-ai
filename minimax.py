@@ -164,7 +164,7 @@ def NUM_IN_A_ROW(count, state, player):
             if adjacent_count > 1:
                 update_count(adjacent_count, player_i, total_counts)
 
-        for col in range(1, 7):
+        for col in range(1, 6):
             row = 0
             adjacent_count = 0
             while row <= 5 and col <= 6:
