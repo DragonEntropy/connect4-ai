@@ -29,6 +29,8 @@ def tokens_in_row(count, player_i, total_counts):
         return
 
 def update_count(adjacent_count, player_i, total_counts):
+    if adjacent_count > 4:
+        adjacent_count = 4
     try:
         total_counts[(player_i, adjacent_count)] += 1
     except KeyError:
@@ -40,10 +42,10 @@ def UTILITY(state):
     num_in_row_calc = False
 
     if NUM_IN_A_ROW(4, state, 'red'): # red: player_i = 0
-        num_in_row_calc = True
+        num_in_row_calc = False
         return 10000
     if NUM_IN_A_ROW(4, state, 'yellow'): # yellow: player_i = 1
-        num_in_row_calc = True
+        num_in_row_calc = False
         return -10000
     # ELSE: return nothing??
 
@@ -163,7 +165,7 @@ def NUM_IN_A_ROW(count, state, player):
             if adjacent_count > 1:
                 update_count(adjacent_count, player_i, total_counts)
 
-        for col in range(1, 7):
+        for col in range(1, 6):
             row = 0
             adjacent_count = 0
             while row <= 5 and col <= 6:
@@ -299,5 +301,5 @@ def connect_four_mm(contents, turn, max_depth):
 
 if __name__ == '__main__':
     # Example function call below, you can add your own to test the connect_four_mm function
-    result = connect_four_mm(".......,.......,.......,.......,.......,.......", "red", 5)
+    result = connect_four_mm("rrry...,.......,.......,.......,.......,.......", "red", 1)
     print(result)
