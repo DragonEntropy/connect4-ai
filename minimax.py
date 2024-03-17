@@ -87,6 +87,8 @@ def NUM_IN_A_ROW(count, state, player):
                     update_count(adjacent_count, player_i, total_counts)
                     # reset to 0 tokens in a row
                     adjacent_count = 0
+            if adjacent_count > 1:
+                update_count(adjacent_count, player_i, total_counts)
         
         # COLUMN TRAVERSALS 
         for col in range(7):
@@ -101,6 +103,8 @@ def NUM_IN_A_ROW(count, state, player):
                     update_count(adjacent_count, player_i, total_counts)
                     # reset to 0 tokens in a row
                     adjacent_count = 0
+            if adjacent_count > 1:
+                update_count(adjacent_count, player_i, total_counts)
         
         # NEGATIVE DIAGONAL TRAVERSALS (negative as in negative gradient) -> decrease row (down) and increase column (right)
         # starting col = 0
@@ -119,6 +123,8 @@ def NUM_IN_A_ROW(count, state, player):
                 # update row and coloumn to continue down the diagonal
                 col += 1 # right
                 row -= 1 # down
+            if adjacent_count > 1:
+                update_count(adjacent_count, player_i, total_counts)
         # starting row = 5
         for col in range(1,6):
             row = 5
@@ -135,6 +141,8 @@ def NUM_IN_A_ROW(count, state, player):
                 # update row and coloumn to continue down the diagonal
                 col += 1 # right
                 row -= 1 # down
+            if adjacent_count > 1:
+                update_count(adjacent_count, player_i, total_counts)
 
         # POSITIVE DIAGONAL TRAVERSALS
         for row in range(0,5):
@@ -152,6 +160,9 @@ def NUM_IN_A_ROW(count, state, player):
                 # update row and coloumn to continue up the diagonal
                 col += 1 # right
                 row += 1 # up
+            if adjacent_count > 1:
+                update_count(adjacent_count, player_i, total_counts)
+
         for col in range(1, 7):
             row = 0
             adjacent_count = 0
@@ -167,6 +178,8 @@ def NUM_IN_A_ROW(count, state, player):
                 # update row and coloumn to continue up the diagonal
                 col += 1 # right
                 row += 1 # up
+            if adjacent_count > 1:
+                update_count(adjacent_count, player_i, total_counts)
 
     num_in_row_calc = True
     # print(total_counts)
@@ -277,6 +290,7 @@ def connect_four_mm(contents, turn, max_depth):
     minimax_score = -math.inf
     minimax_index = -1
     nodes_examined += 1
+    # print(scores_stack[0])
     for i, score in enumerate(scores_stack[0]):
         if score > minimax_score:
             minimax_score = score
@@ -285,5 +299,5 @@ def connect_four_mm(contents, turn, max_depth):
 
 if __name__ == '__main__':
     # Example function call below, you can add your own to test the connect_four_mm function
-    result = connect_four_mm("..y.r..,..y.r..,..y.r..,.......,.......,.......", "red", 3)
+    result = connect_four_mm(".......,.......,.......,.......,.......,.......", "red", 5)
     print(result)
