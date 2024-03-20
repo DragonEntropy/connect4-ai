@@ -39,7 +39,7 @@ def update_count(adjacent_count, player_i, total_counts):
 
 def UTILITY(state):
     global num_in_row_calc
-    num_in_row_calc = False # TODO: change to True
+    num_in_row_calc = False
 
     if NUM_IN_A_ROW(4, state, 'red'): # red: player_i = 0
         num_in_row_calc = False
@@ -47,6 +47,7 @@ def UTILITY(state):
     if NUM_IN_A_ROW(4, state, 'yellow'): # yellow: player_i = 1
         num_in_row_calc = False
         return -10000
+    num_in_row_calc = False
     # ELSE: return nothing??
 
 # TODO: if a row has no tokens the rows above don't need to be traversed
@@ -226,6 +227,9 @@ def connect_four_mm(contents, turn, max_depth):
     global num_in_row_calc
     current_state = decode(contents)
 
+    if UTILITY(current_state):
+        return "0\n1"
+
     # Using a stack to implement recursion. Needs to track:
     #   The path along the DFS search
     #   The current recursion depth
@@ -265,7 +269,10 @@ def connect_four_mm(contents, turn, max_depth):
 
             # Case where max depth is reached terminal is reached
             score = EVALUATION(current_state)
-            if current_depth == max_depth - 1 or UTILITY(current_state):
+            utility = UTILITY(current_state)
+            if current_depth == max_depth - 1 or utility:
+                if utility:
+                    score = utility
                 scores_stack[current_depth].append((1 if turn == "red" else -1) * score)
                 # print_board(current_state)
                 remove_piece(current_state, current_col)
@@ -301,5 +308,5 @@ def connect_four_mm(contents, turn, max_depth):
 
 if __name__ == '__main__':
     # Example function call below, you can add your own to test the connect_four_mm function
-    result = connect_four_mm("rrry...,.......,.......,.......,.......,.......", "red", 1)
+    result = connect_four_mm(".....ry,.......,.......,.......,.......,.......", "red", 2)
     print(result)
