@@ -229,12 +229,12 @@ def connect_four_mm(contents, turn, max_depth):
     # Using a stack to implement recursion. Needs to track:
     #   The path along the DFS search
     #   The current recursion depth
-    column_stack = list()
-    scores_stack = list(list() for i in range(max_depth))
+    column_stack = list()  # column/path of current spot in DFS
+    scores_stack = list(list() for i in range(max_depth))  # list of lists: inner lists represent each depth level
 
     current_depth = 0
     current_col = 0
-    is_red = turn == "red"
+    is_red = ( turn == "red" )
     nodes_examined = 0
 
     while (current_col != 7 or current_depth != 0):
@@ -243,12 +243,12 @@ def connect_four_mm(contents, turn, max_depth):
         if current_col == 7:
 
             # MIN case
-            if current_depth % 2:
+            if current_depth % 2:  # returns 1: odd value = MIN case
                 scores_stack[current_depth - 1].append(min(scores_stack[current_depth]))
                 scores_stack[current_depth].clear()
             
             # MAX case
-            else:
+            else: # returns 0: even value = MAX case
                 scores_stack[current_depth - 1].append(max(scores_stack[current_depth]))
                 scores_stack[current_depth].clear()
 
@@ -256,7 +256,7 @@ def connect_four_mm(contents, turn, max_depth):
             nodes_examined += 1
             current_depth -= 1
             remove_piece(current_state, column_stack[current_depth])
-            is_red = not is_red
+            is_red = not is_red  # swap player
             current_col = column_stack.pop() + 1
 
 
