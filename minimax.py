@@ -227,18 +227,19 @@ def connect_four_mm(contents, turn, max_depth):
     global num_in_row_calc
     current_state = decode(contents)
 
+    # game already complete: place token in first column, only this 1 state examined
     if UTILITY(current_state):
         return "0\n1"
 
     # Using a stack to implement recursion. Needs to track:
     #   The path along the DFS search
     #   The current recursion depth
-    column_stack = list()  # column/path of current spot in DFS
-    scores_stack = list(list() for i in range(max_depth))  # list of lists: inner lists represent each depth level
+    column_stack = list()  # DFS column
+    scores_stack = list(list() for i in range(max_depth))  # keeps track of the level of the DFS
 
     current_depth = 0
     current_col = 0
-    is_red = ( turn == "red" )
+    is_red = turn == "red"
     nodes_examined = 0
 
     while (current_col != 7 or current_depth != 0):
@@ -247,12 +248,12 @@ def connect_four_mm(contents, turn, max_depth):
         if current_col == 7:
 
             # MIN case
-            if current_depth % 2:  # returns 1: odd value = MIN case
+            if current_depth % 2:
                 scores_stack[current_depth - 1].append(min(scores_stack[current_depth]))
                 scores_stack[current_depth].clear()
             
             # MAX case
-            else: # returns 0: even value = MAX case
+            else:
                 scores_stack[current_depth - 1].append(max(scores_stack[current_depth]))
                 scores_stack[current_depth].clear()
 
@@ -260,7 +261,7 @@ def connect_four_mm(contents, turn, max_depth):
             nodes_examined += 1
             current_depth -= 1
             remove_piece(current_state, column_stack[current_depth])
-            is_red = not is_red  # swap player
+            is_red = not is_red
             current_col = column_stack.pop() + 1
 
 
