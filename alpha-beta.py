@@ -242,17 +242,23 @@ def connect_four_ab(contents, turn, max_depth):
     is_red = turn == "red"
     nodes_examined = 0
 
+    best_choice = -1
+
     while (current_col != 7 or current_depth != 0):
         is_red = (current_depth % 2 == 0) == (turn == "red")
         
         # Case to move back up in the DFS
         if current_col == 7:
             if current_depth % 2:
+                old_score = scores_stack[current_depth - 1]
                 scores_stack[current_depth - 1] = max(scores_stack[current_depth], scores_stack[current_depth - 1])
+                if current_depth == 1 and old_score < scores_stack[current_depth - 1]:
+                    best_choice = column_stack[0]
             else:
                 scores_stack[current_depth - 1] = min(scores_stack[current_depth], scores_stack[current_depth - 1])
                 
             scores_stack[current_depth] = math.inf if current_depth % 2 else -math.inf
+
 
             nodes_examined += 1
             print(nodes_examined, scores_stack, column_stack, current_col, '^')
@@ -272,7 +278,12 @@ def connect_four_ab(contents, turn, max_depth):
             if is_terminal:
                 if utility:
                     score = utility
-                scores_stack[current_depth] = max(score, scores_stack[current_depth]) if (is_red == (turn == "red")) else min(score, scores_stack[current_depth])
+
+                old_score = scores_stack[current_depth]
+                scores_stack[current_depth] = max(score, old_score) if (is_red == (turn == "red")) else min(score, old_score)
+                if (old_score != scores_stack[current_depth]) and current_depth == 0:
+                    best_choice = current_col
+
                 remove_piece(current_state, current_col)
                 nodes_examined += 1
                 print(nodes_examined, scores_stack, column_stack, current_col, '|')
@@ -316,12 +327,12 @@ def connect_four_ab(contents, turn, max_depth):
         
 
     nodes_examined += 1 
-    minimax_index = 0
     print(scores_stack[0])
-    return f"{minimax_index}\n{nodes_examined}"
+    return f"{best_choice}\n{nodes_examined}"
 
 if __name__ == '__main__':
     # Example function call below, you can add your own to test the connect_four_mm function
     # connect_four_ab("xxxxxxx,xxxxxxx,xxxxxxx,xxxxxxx,xxxxxxx,....xxx", "red", 4)
-    result = connect_four_ab("..xxxxx,..xxxxx,..xxxxx,..xxxxx,..xxxxx,..xxxxx", "red", 4)
+    # result = connect_four_ab("xxxxxxx,xxxxxxx,xxxxxxx,xxxxxxx,xxxxxxx,.......", "red", 4)
+    result = connect_four_ab("..y.r..,..y.r..,.......,.......,.......,.......", "red", 1)
     print(result)
