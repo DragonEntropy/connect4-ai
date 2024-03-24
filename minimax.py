@@ -227,14 +227,15 @@ def connect_four_mm(contents, turn, max_depth):
     global num_in_row_calc
     current_state = decode(contents)
 
+    # game already complete: place token in first column, only this 1 state examined
     if UTILITY(current_state):
         return "0\n1"
 
     # Using a stack to implement recursion. Needs to track:
     #   The path along the DFS search
     #   The current recursion depth
-    column_stack = list()
-    scores_stack = list(list() for i in range(max_depth))
+    column_stack = list()  # DFS column
+    scores_stack = list(list() for i in range(max_depth))  # keeps track of the level of the DFS
 
     current_depth = 0
     current_col = 0
