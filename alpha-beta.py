@@ -278,6 +278,7 @@ def connect_four_ab(contents, turn, max_depth):
             if is_terminal:
                 if utility:
                     score = utility
+                score *= (1 if (turn == "red") else -1)
 
                 old_score = scores_stack[current_depth]
                 scores_stack[current_depth] = max(score, old_score) if (is_red == (turn == "red")) else min(score, old_score)
@@ -334,5 +335,5 @@ if __name__ == '__main__':
     # Example function call below, you can add your own to test the connect_four_mm function
     # connect_four_ab("xxxxxxx,xxxxxxx,xxxxxxx,xxxxxxx,xxxxxxx,....xxx", "red", 4)
     # result = connect_four_ab("xxxxxxx,xxxxxxx,xxxxxxx,xxxxxxx,xxxxxxx,.......", "red", 4)
-    result = connect_four_ab("..y.r..,..y.r..,.......,.......,.......,.......", "red", 1)
+    result = connect_four_ab("r..y..r,r..y..r,......r,.......,.......,.......", "red", 2)
     print(result)
