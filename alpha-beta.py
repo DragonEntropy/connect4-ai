@@ -221,6 +221,7 @@ def remove_piece(state, col):
         if state[row][col] != '.':
             state[row][col] = '.'
             return True
+    print("REMOVAL ERROR!")
     return False
 
 def connect_four_ab(contents, turn, max_depth):
@@ -241,50 +242,44 @@ def connect_four_ab(contents, turn, max_depth):
     is_red = turn == "red"
     nodes_examined = 0
 
-    best_choice = -1
-    update_score = True
-
     while (current_col != 7 or current_depth != 0):
+        is_red = (current_depth % 2 == 0) == (turn == "red")
         
         # Case to move back up in the DFS
         if current_col == 7:
-            if update_score:
-                old_score = scores_stack[current_depth - 1]
-                scores_stack[current_depth - 1] = scores_stack[current_depth]
-                if current_depth == 1 and old_score != scores_stack[0]:
-                    best_choice = column_stack[0]
-            else:
-                update_score = True
             
-            # print(column_stack, current_col)
+            scores_stack[current_depth - 1] = scores_stack[current_depth]
+            scores_stack[current_depth] = math.inf if current_depth % 2 else -math.inf
+
             nodes_examined += 1
+            print(nodes_examined, scores_stack, column_stack, current_col, '^')
             current_depth -= 1
+            print(column_stack[current_depth])
             remove_piece(current_state, column_stack[current_depth])
-            is_red = not is_red
+            print_board(current_state)
             current_col = column_stack.pop() + 1
+            print(current_col)
+
 
         # Try to place piece in current column
         elif drop_piece(current_state, current_col, is_red):
 
             # Case where max depth is reached terminal is reached
-            score = EVALUATION(current_state) * (1 if turn == "red" else -1)
+            score = EVALUATION(current_state)
             utility = UTILITY(current_state)
-            is_terminal = current_depth == max_depth - 1 or utility
-            
-            # No pruning at top layer, but index tracking is required
-
-            # Terminal condition
+            is_terminal = (current_depth == max_depth - 1) or utility
             if is_terminal:
-                old_score = scores_stack[current_depth]
+                if utility:
+                    score = utility
                 scores_stack[current_depth] = max(score, scores_stack[current_depth]) if (is_red == (turn == "red")) else min(score, scores_stack[current_depth])
-                if current_depth == 0 and old_score != scores_stack[0]:
-                    best_choice = current_col
-                # print_board(current_state)
                 remove_piece(current_state, current_col)
-                # print(column_stack, current_col)
                 nodes_examined += 1
+                print(nodes_examined, scores_stack, column_stack, current_col, '|')
+                print_board(current_state)
 
-            # Alpha-beta pruning condition
+            # Case to move further down in the DFS
+            
+            pruned = False
             if current_depth > 0:
                 # MAX choice case
                 if is_red == (turn == "red"):
@@ -296,44 +291,34 @@ def connect_four_ab(contents, turn, max_depth):
                     alpha = scores_stack[current_depth - 1]
                     beta = scores_stack[current_depth]
 
-                # print(f"Alpha: {alpha}, Beta: {beta}")
-                # print(scores_stack)
-
                 # Perform pruning
                 if alpha >= beta:
-                    remove_piece(current_state, current_col)
-                    current_col = 7
+                    if not is_terminal:
+                        remove_piece(current_state, current_col)
+                    current_col = 6
+                    pruned = True
+                    print(nodes_examined, scores_stack, column_stack, current_col, 'X')
                     print_board(current_state)
-                    update_score = False
-                    # print("Prunned!")
+            current_col += 1
 
-            # Non-terminal deepening of search
-            if not is_terminal and update_score:
-                column_stack.append(current_col)
-                current_depth += 1
-                current_col = 0
-                is_red = not is_red
-
-                # Resetting score in new branch
-                scores_stack[current_depth] = (math.inf if current_depth % 2 else -math.inf)
-
-            num_in_row_calc = False
-            if current_col != 7:
-                current_col += 1 
+            if not is_terminal:
+                if not pruned:
+                    print(nodes_examined, scores_stack, column_stack, current_col, 'v')
+                    print_board(current_state)
+                    column_stack.append(current_col - 1)
+                    current_depth += 1
+                    current_col = 0
 
 
-        # Case to move further down in the DFS
         else:
             current_col += 1
         
-        # print_board(current_state)
-        print(scores_stack)
 
-    nodes_examined += 1
-    # print(scores_stack)
-    return f"{best_choice}\n{nodes_examined}"
+    nodes_examined += 1 
+    minimax_index = 0
+    return f"{minimax_index}\n{nodes_examined}"
 
 if __name__ == '__main__':
     # Example function call below, you can add your own to test the connect_four_mm function
-    result = connect_four_ab(".r.....,.......,.......,.......,.......,.......", "red", 3)
+    result = connect_four_ab(".......,.......,.......,.......,.......,.......", "red", 5)
     print(result)
