@@ -247,18 +247,19 @@ def connect_four_ab(contents, turn, max_depth):
         
         # Case to move back up in the DFS
         if current_col == 7:
-            
-            scores_stack[current_depth - 1] = scores_stack[current_depth]
+            if current_depth % 2:
+                scores_stack[current_depth - 1] = max(scores_stack[current_depth], scores_stack[current_depth - 1])
+            else:
+                scores_stack[current_depth - 1] = min(scores_stack[current_depth], scores_stack[current_depth - 1])
+                
             scores_stack[current_depth] = math.inf if current_depth % 2 else -math.inf
 
             nodes_examined += 1
             print(nodes_examined, scores_stack, column_stack, current_col, '^')
             current_depth -= 1
-            print(column_stack[current_depth])
             remove_piece(current_state, column_stack[current_depth])
             print_board(current_state)
             current_col = column_stack.pop() + 1
-            print(current_col)
 
 
         # Try to place piece in current column
@@ -316,9 +317,11 @@ def connect_four_ab(contents, turn, max_depth):
 
     nodes_examined += 1 
     minimax_index = 0
+    print(scores_stack[0])
     return f"{minimax_index}\n{nodes_examined}"
 
 if __name__ == '__main__':
     # Example function call below, you can add your own to test the connect_four_mm function
-    result = connect_four_ab(".......,.......,.......,.......,.......,.......", "red", 5)
+    # connect_four_ab("xxxxxxx,xxxxxxx,xxxxxxx,xxxxxxx,xxxxxxx,....xxx", "red", 4)
+    result = connect_four_ab("..xxxxx,..xxxxx,..xxxxx,..xxxxx,..xxxxx,..xxxxx", "red", 4)
     print(result)
