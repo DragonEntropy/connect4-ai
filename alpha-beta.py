@@ -52,25 +52,18 @@ def UTILITY(state):
 
 # TODO: if a row has no tokens the rows above don't need to be traversed
 def NUM_IN_A_ROW(count, state, player):
-    # INPUT
-        # state: decode(string): list of lists: state[row][column]
-        # count: int 2, 3, or 4: the number of tokens in a row being counted
-        # player: "red" or "yellow"
-    # OUTPUT
-        # int: number times "player" coloured tokens have "count" tokens in a row
 
     # for the given state:
-
     global single_counts, num_in_row_calc, total_counts
-    if not num_in_row_calc:
-        single_counts = {player_i : 0 for player_i in [0, 1]}
-        total_counts = {(player_i, length) : 0 for player_i in [0, 1] for length in [2, 3, 4]}
-
-    player_index = player_to_index(player)
 
     if num_in_row_calc:
         return tokens_in_row(count, player_index, total_counts)
-    
+
+    single_counts = {player_i : 0 for player_i in [0, 1]}
+    total_counts = {(player_i, length) : 0 for player_i in [0, 1] for length in [2, 3, 4]}
+    player_index = player_to_index(player)
+
+
     for player in ['red', 'yellow']:
         player_i = player_to_index(player)
         token = colour_to_char(player)
