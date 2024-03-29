@@ -237,7 +237,7 @@ def connect_four_mm(contents, turn, max_depth):
     column_stack = list()  # DFS column
     scores_stack = list(list() for i in range(max_depth))  # keeps track of the level of the DFS
 
-    current_depth = 0
+    current_depth = 0 # the move we're making
     current_col = 0
     is_red = turn == "red"
     nodes_examined = 0
@@ -271,14 +271,14 @@ def connect_four_mm(contents, turn, max_depth):
             # Case where max depth is reached terminal is reached
             score = EVALUATION(current_state)
             utility = UTILITY(current_state)
-            if current_depth == max_depth - 1 or utility:
+            if current_depth == max_depth - 1 or utility: # max depth or someone's won
                 if utility:
                     score = utility
-                scores_stack[current_depth].append((1 if turn == "red" else -1) * score)
+                scores_stack[current_depth].append((1 if turn == "red" else -1) * score) 
                 # print_board(current_state)
                 remove_piece(current_state, current_col)
                 # print(column_stack, current_col)
-                current_col += 1
+                current_col += 1 # change column since max depth or won
                 nodes_examined += 1
 
             # Case to move further down in the DFS

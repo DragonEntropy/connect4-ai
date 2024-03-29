@@ -52,25 +52,20 @@ def UTILITY(state):
 
 # TODO: if a row has no tokens the rows above don't need to be traversed
 def NUM_IN_A_ROW(count, state, player):
-    # INPUT
-        # state: decode(string): list of lists: state[row][column]
-        # count: int 2, 3, or 4: the number of tokens in a row being counted
-        # player: "red" or "yellow"
-    # OUTPUT
-        # int: number times "player" coloured tokens have "count" tokens in a row
 
     # for the given state:
-
     global single_counts, num_in_row_calc, total_counts
+
     if not num_in_row_calc:
         single_counts = {player_i : 0 for player_i in [0, 1]}
         total_counts = {(player_i, length) : 0 for player_i in [0, 1] for length in [2, 3, 4]}
-
+    
     player_index = player_to_index(player)
 
     if num_in_row_calc:
         return tokens_in_row(count, player_index, total_counts)
-    
+
+
     for player in ['red', 'yellow']:
         player_i = player_to_index(player)
         token = colour_to_char(player)
@@ -235,7 +230,7 @@ def connect_four_ab(contents, turn, max_depth):
     #   The path along the DFS search
     #   The current recursion depth
     column_stack = list()
-    scores_stack = list((math.inf if i % 2 else -math.inf) for i in range(max_depth))
+    scores_stack = list((math.inf if i % 2 else -math.inf) for i in range(max_depth)) # instead of a list of lists - it's now a list
 
     current_depth = 0
     current_col = 0
@@ -280,6 +275,8 @@ def connect_four_ab(contents, turn, max_depth):
                     score = utility
                 score *= (1 if (turn == "red") else -1)
 
+                # store old_score and score: two given states comparing instead of comparing all 7 states at the end
+
                 old_score = scores_stack[current_depth]
                 scores_stack[current_depth] = max(score, old_score) if (is_red == (turn == "red")) else min(score, old_score)
                 if (old_score != scores_stack[current_depth]) and current_depth == 0:
@@ -293,7 +290,7 @@ def connect_four_ab(contents, turn, max_depth):
             # Case to move further down in the DFS
             
             pruned = False
-            if current_depth > 0:
+            if current_depth > 0: # no need to prune at top level
                 # MAX choice case
                 if is_red == (turn == "red"):
                     alpha = scores_stack[current_depth]
@@ -308,7 +305,7 @@ def connect_four_ab(contents, turn, max_depth):
                 if alpha >= beta:
                     if not is_terminal:
                         remove_piece(current_state, current_col)
-                    current_col = 6
+                    current_col = 6 # change to last column so that the remainder don't get traversed
                     pruned = True
                     print_board(current_state)
                     print(nodes_examined, scores_stack, column_stack, current_col, 'X')
