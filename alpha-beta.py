@@ -261,10 +261,10 @@ def connect_four_ab(contents, turn, max_depth):
 
 
             nodes_examined += 1
+            print_board(current_state)
             print(nodes_examined, scores_stack, column_stack, current_col, '^')
             current_depth -= 1
             remove_piece(current_state, column_stack[current_depth])
-            print_board(current_state)
             current_col = column_stack.pop() + 1
 
 
@@ -285,10 +285,10 @@ def connect_four_ab(contents, turn, max_depth):
                 if (old_score != scores_stack[current_depth]) and current_depth == 0:
                     best_choice = current_col
 
+                print_board(current_state)
+                print(nodes_examined, scores_stack, column_stack, current_col, '|')
                 remove_piece(current_state, current_col)
                 nodes_examined += 1
-                print(nodes_examined, scores_stack, column_stack, current_col, '|')
-                print_board(current_state)
 
             # Case to move further down in the DFS
             
@@ -297,11 +297,11 @@ def connect_four_ab(contents, turn, max_depth):
                 # MAX choice case
                 if is_red == (turn == "red"):
                     alpha = scores_stack[current_depth]
-                    beta = scores_stack[current_depth - 1]
+                    beta = min(scores_stack[i] for i in range(1, current_depth + 1, 2))
 
                 # MIN choice case
                 else:
-                    alpha = scores_stack[current_depth - 1]
+                    alpha = max(scores_stack[i] for i in range(0, current_depth + 1, 2))
                     beta = scores_stack[current_depth]
 
                 # Perform pruning
@@ -310,14 +310,14 @@ def connect_four_ab(contents, turn, max_depth):
                         remove_piece(current_state, current_col)
                     current_col = 6
                     pruned = True
-                    print(nodes_examined, scores_stack, column_stack, current_col, 'X')
                     print_board(current_state)
+                    print(nodes_examined, scores_stack, column_stack, current_col, 'X')
             current_col += 1
 
             if not is_terminal:
                 if not pruned:
-                    print(nodes_examined, scores_stack, column_stack, current_col, 'v')
                     print_board(current_state)
+                    print(nodes_examined, scores_stack, column_stack, current_col, 'v')
                     column_stack.append(current_col - 1)
                     current_depth += 1
                     current_col = 0
@@ -328,12 +328,11 @@ def connect_four_ab(contents, turn, max_depth):
         
 
     nodes_examined += 1 
-    print(scores_stack[0])
+    print(f"Score: {scores_stack[0]}")
     return f"{best_choice}\n{nodes_examined}"
 
 if __name__ == '__main__':
     # Example function call below, you can add your own to test the connect_four_mm function
-    # connect_four_ab("xxxxxxx,xxxxxxx,xxxxxxx,xxxxxxx,xxxxxxx,....xxx", "red", 4)
-    # result = connect_four_ab("xxxxxxx,xxxxxxx,xxxxxxx,xxxxxxx,xxxxxxx,.......", "red", 4)
-    result = connect_four_ab("r..y..r,r..y..r,......r,.......,.......,.......", "red", 2)
+    # result = connect_four_ab("xxxxxxx,xxxxxxx,xxxxxxx,xxxxxxx,xxx.xxx,xx...xx", "red", 4)
+    result = connect_four_ab(".......,.......,.......,.......,.......,.......", "red", 4)
     print(result)
