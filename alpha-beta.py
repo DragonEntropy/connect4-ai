@@ -256,8 +256,8 @@ def connect_four_ab(contents, turn, max_depth):
 
 
             nodes_examined += 1
-            print_board(current_state)
-            print(nodes_examined, scores_stack, column_stack, current_col, '^')
+            # print_board(current_state)
+            # print(nodes_examined, scores_stack, column_stack, current_col, '^')
             current_depth -= 1
             remove_piece(current_state, column_stack[current_depth])
             current_col = column_stack.pop() + 1
@@ -282,8 +282,8 @@ def connect_four_ab(contents, turn, max_depth):
                 if (old_score != scores_stack[current_depth]) and current_depth == 0:
                     best_choice = current_col
 
-                print_board(current_state)
-                print(nodes_examined, scores_stack, column_stack, current_col, '|')
+                # print_board(current_state)
+                # print(nodes_examined, scores_stack, column_stack, current_col, '|')
                 remove_piece(current_state, current_col)
                 nodes_examined += 1
 
@@ -307,14 +307,14 @@ def connect_four_ab(contents, turn, max_depth):
                         remove_piece(current_state, current_col)
                     current_col = 6 # change to last column so that the remainder don't get traversed
                     pruned = True
-                    print_board(current_state)
-                    print(nodes_examined, scores_stack, column_stack, current_col, 'X')
+                    # print_board(current_state)
+                    # print(nodes_examined, scores_stack, column_stack, current_col, 'X')
             current_col += 1
 
             if not is_terminal:
                 if not pruned:
-                    print_board(current_state)
-                    print(nodes_examined, scores_stack, column_stack, current_col, 'v')
+                    # print_board(current_state)
+                    # print(nodes_examined, scores_stack, column_stack, current_col, 'v')
                     column_stack.append(current_col - 1)
                     current_depth += 1
                     current_col = 0
@@ -325,7 +325,7 @@ def connect_four_ab(contents, turn, max_depth):
         
 
     nodes_examined += 1 
-    print(f"Score: {scores_stack[0]}")
+    # print(f"Score: {scores_stack[0]}")
     return f"{best_choice}\n{nodes_examined}"
 
 if __name__ == '__main__':
