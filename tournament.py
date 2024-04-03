@@ -47,7 +47,7 @@ def count_consecutive_pieces(state):
         player_i = player_to_index(player)
         token = colour_to_char(player)
 
-        # ROW TRAVERSALS - note if row has ≤1 token in it then there's no point checking the row/s above it
+        # HORIZONTAL/ROW TRAVERSALS - note if row has ≤1 token in it then there's no point checking the row/s above it
         for row in range(6):
             # for the current row, iterate across each value in it (so column index)
             adjacent_count = 0 
