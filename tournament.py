@@ -47,7 +47,7 @@ def colour_to_char(player):
 #         # print(f"invalid adjacent count: Key {(player_i, adjacent_count)}")
 #         return
 
-def blank_setup(state, row, col):
+def blank_set_up(state, row, col):
     # don't check for valid input - will waste time in tournament # TODO: delete this input validity check once code is working
     if row < 0 or row > 5 or col < 0 or col > 6:
         print("invalid input")
@@ -56,11 +56,13 @@ def blank_setup(state, row, col):
         return True
     return not state[row-1, col] == '.'
 
-def segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_setup_count):
+def segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count):
+    if segment_len < 4 or tokens_count <= 0:
+        return 0
     # calculate factors
-    blanks_setup_factor = 1 + 0.2*(blanks_setup_count/blanks_count)
+    blanks_set_up_factor = 1 + 0.2*(blanks_set_up_count/blanks_count)
     token_edge_factor = 1 + 0.5*(edges_count/(tokens_count-1))
-    return (1.5*tokens_count + blanks_count) * blanks_setup_factor * token_edge_factor
+    return (1.5*tokens_count + blanks_count) * blanks_set_up_factor * token_edge_factor
 
 # TODO: optimise traversals 
 def state_heuristic(state: np.matrix, player: str): 
@@ -68,14 +70,14 @@ def state_heuristic(state: np.matrix, player: str):
     # red counts - store separately for purpose of analysing our heuristic
     red_row_heuristic_sum = 0
     red_col_heuristic_sum = 0
-    red_pos_diag_heuristic_sum = 0
     red_neg_diag_heuristic_sum = 0
+    red_pos_diag_heuristic_sum = 0
 
     # yellow counts
     yel_row_heuristic_sum = 0
     yel_col_heuristic_sum = 0
-    yel_pos_diag_heuristic_sum = 0
     yel_neg_diag_heuristic_sum = 0
+    yel_pos_diag_heuristic_sum = 0
     
     # players' total counts (calc at end)
     red_total_heuristic = 0
@@ -93,174 +95,630 @@ def state_heuristic(state: np.matrix, player: str):
         edges_count = 0
         prev_val = '' # used for checking for edges (consecutive tokens)
         blanks_count = 0
-        consecutive_blanks = 0 # used for when segment changes player (overlap section of segments)
-        blanks_setup_count = 0 # count the num blanks setup - ie able to have a token placed there without requiring below positions to be filled with tokens
-        setup_count_of_consecutive_blanks = 0
+        blanks_set_up_count = 0 # count the num blanks set_up - ie able to have a token placed there without requiring below positions to be filled with tokens
 
         for row in range(6):
             val = state[row, col]
+            
             # val is a blank - update variables the same way no matter current_segment_colour
+            # optimisation: the rest of the positions above must also be blank
             if val == '.':
-                segment_len += 1
-                blanks_count += 1
-                consecutive_blanks += 1
-                if blank_setup(state, row, col):
-                    blanks_setup_count += 1
-                    setup_count_of_consecutive_blanks +=1 
+                # first blank traversed, the rest are above it
+                blanks_count = 6 - row   
+                segment_len += 6 - row
+                blanks_set_up_count = 1 # columns can only have 1 blank set_up
+                if current_segment_colour == "red":
+                    red_col_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                elif current_segment_colour == "yellow":
+                    yel_col_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                break # if segment_colour = "" --> col was empty, no segment
 
             elif current_segment_colour == "red":
-                if val == '.':
-                    segment_len += 1
-                    blanks_count += 1
-                    consecutive_blanks += 1
-                    if blank_setup(state, row, col):
-                        blanks_setup_count += 1
-                        setup_count_of_consecutive_blanks +=1
-                elif val == 'r':
+                if val == 'r':
                     segment_len += 1
                     tokens_count += 1
                     edges_count += 1 if prev_val == 'r' else edges_count
-                    consecutive_blanks = 0
-                    setup_count_of_consecutive_blanks = 0
                 elif val == 'y':
-                    # PREV SEGMENT COMPLETE: update heuristic scores
-                    red_col_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_setup_count)
+                    # PREV SEGMENT COMPLETE: update heuristic scores. Cannot be any blanks in this complete sequence in col
+                    red_col_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, 0, 0)
                     # begin next segment - may overlap and include blanks right before it - reset all varaibles
-                    segment_len = consecutive_blanks + 1
-                    blanks_count = consecutive_blanks
-                    blanks_setup_count = setup_count_of_consecutive_blanks
-                    consecutive_blanks = 0
-                    setup_count_of_consecutive_blanks = 0
+                    segment_len = 1
                     current_segment_colour = "yellow"
                     tokens_count = 1
                     edges_count = 0
                 else:
                     print("invalid matrix character")
 
-            elif current_segment_colour == "yellow":
-                if val == '.':
+            elif current_segment_colour == "yellow":             
+                if val == 'y':
                     segment_len += 1
-                    blanks_count += 1
-                    consecutive_blanks += 1
-                    if blank_setup(state, row, col):
-                        blanks_setup_count += 1
-                        setup_count_of_consecutive_blanks +=1                
+                    tokens_count += 1
+                    edges_count += 1 if prev_val == 'y' else edges_count
                 elif val == 'r':
-                elif val == 'y':
-                
+                    # PREV SEGMENT COMPLETE: update heuristic scores
+                    yel_col_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, 0, 0)
+                    # begin next segment - may overlap and include blanks right before it - reset all varaibles
+                    segment_len = 1
+                    current_segment_colour = "red"
+                    tokens_count = 1
+                    edges_count = 0
                 else:
                     print("invalid matrix character")
             
+            # the first token has been found: it determines the colour of the first segment
             elif current_segment_colour == "":
-                if val == '.':
-                
-                elif val == 'r':
-                
+                if val == 'r':
+                    current_segment_colour = "red"
+                    segment_len = 1
+                    tokens_count = 1
                 elif val == 'y':
-                
+                    current_segment_colour = "yellow"
+                    segment_len = 1
+                    tokens_count = 1
                 else:
                     print("invalid matrix character")
             
             else:
                 print("invalid segment colour")
 
-
-            if val == 'r':
-
-
-            # optimising case: if a position is empty, all above positions are
-            if val == '.':
-                # TODO: optimise - complete this column data within this loop (given all above are blanks) & break to next col
-                break
-
             # update previous val
             prev_val = val
+
+            # if at the end of the column --> add the final segment to heuristic value
+            if row == 5:
+                if current_segment_colour == "red":
+                    red_col_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                elif current_segment_colour == "yellow":
+                    yel_col_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count) 
             
     # HORIZONTAL/ROW TRAVERSALS 
+    # initialise to 0 for optimisation check before traversing each row 
+    blanks_count = 0
     for row in range(6):
-        # variables to update each row
-        empty_row = False
+        
+        # optimisation: check if the previous row was all blanks - if so, the rest above are
+        if blanks_count == 7:
+            # no more segments left: the rest of rows are empty/blank
+            break
+
+        # variables used for heuristic calculation, for a given segment:
+        current_segment_colour = "" # inital segment colour is determined after the first token is found (then the blanks are apart of its segment)
+        segment_len = 0
+        tokens_count = 0
+        edges_count = 0
+        prev_val = '' # used for checking for edges (consecutive tokens)
+        blanks_count = 0
+        consecutive_blanks = 0 # used for when segment changes player (overlap section of segments)
+        blanks_set_up_count = 0 # count the num blanks set_up - ie able to have a token placed there without requiring below positions to be filled with tokens
+        set_up_count_of_consecutive_blanks = 0
+
         for col in range(7):
-            # optimising case: if a row is empty, all above rows don't need to be traversed
-            if empty_row:
-                break
             val = state[row, col]
 
-            # TODO: set row to empty if all blanks
-    
+            # val is a blank - update variables the same way no matter current_segment_colour
+            # optimisation: the rest of the positions above must also be blank
+            if val == '.':
+                segment_len += 1
+                blanks_count += 1
+                consecutive_blanks += 1
+                if blank_set_up(state, row, col):
+                    blanks_set_up_count += 1
+                    set_up_count_of_consecutive_blanks +=1 
+
+            elif current_segment_colour == "red":
+                if val == 'r':
+                    segment_len += 1
+                    tokens_count += 1
+                    edges_count += 1 if prev_val == 'r' else edges_count
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                elif val == 'y':
+                    # PREV SEGMENT COMPLETE: update heuristic scores
+                    red_row_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                    # begin next segment - may overlap and include blanks right before it - reset all varaibles
+                    segment_len = consecutive_blanks + 1
+                    blanks_count = consecutive_blanks
+                    blanks_set_up_count = set_up_count_of_consecutive_blanks
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                    current_segment_colour = "yellow"
+                    tokens_count = 1
+                    edges_count = 0
+                else:
+                    print("invalid matrix character")
+
+            elif current_segment_colour == "yellow":             
+                if val == 'y':
+                    segment_len += 1
+                    tokens_count += 1
+                    edges_count += 1 if prev_val == 'y' else edges_count
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                elif val == 'r':
+                    # PREV SEGMENT COMPLETE: update heuristic scores
+                    yel_row_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                    # begin next segment - may overlap and include blanks right before it - reset all varaibles
+                    segment_len = consecutive_blanks + 1
+                    blanks_count = consecutive_blanks
+                    blanks_set_up_count = set_up_count_of_consecutive_blanks
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                    current_segment_colour = "red"
+                    tokens_count = 1
+                    edges_count = 0
+                else:
+                    print("invalid matrix character")
+            
+            # the first token has been found: it determines the colour of the first segment
+            elif current_segment_colour == "":
+                if val == 'r':
+                    current_segment_colour = "red"
+                    segment_len += 1
+                    tokens_count += 1
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                elif val == 'y':
+                    current_segment_colour = "yellow"
+                    segment_len += 1
+                    tokens_count += 1
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0                
+                else:
+                    print("invalid matrix character")
+            
+            else:
+                print("invalid segment colour")
+
+            # update prev value
+            prev_val = val
+
+            # check if end of row, store segment value. Unless row full of blanks
+            if col == 6:
+                if current_segment_colour == "red":
+                    red_row_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                elif current_segment_colour == "yellow":
+                    yel_row_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)                     
+
     # NEGATIVE DIAGONAL TRAVERSALS (negative gradient) -> decrease row (down) and increase column (right)
-    
     min_col = 0 # for optimisaton: if a given column has a lower elemnt found empty, all above are empty 
+    # part 1
     # starting col = 0
-    for col in range(0,7):
+    tokens_count = 0
+    blanks_count = 0
+    for col in range(3,7):
         # neg diag part 1: initial row is always 0 (blue)
         row = 0
-        initial_col = col
-        # variable for optimisation
-        empty_diag = True
+
+        # optimisation: check if previous diagonal was all empty
+        if blanks_count > 0 and tokens_count == 0:
+            min_col = col # new col is the min you can go (everything to the left is empty)
+
+        # variables used for heuristic calculation, for a given segment:
+        current_segment_colour = "" # inital segment colour is determined after the first token is found (then the blanks are apart of its segment)
+        segment_len = 0
+        tokens_count = 0
+        edges_count = 0
+        prev_val = '' # used for checking for edges (consecutive tokens)
+        blanks_count = 0
+        blanks_set_up_count = 0 # count the num blanks set_up - ie able to have a token placed there without requiring below positions to be filled with tokens
+
         while row <= 5 and col >= min_col:
             val = state[row, col]
 
+            # val is a blank - update variables the same way no matter current_segment_colour
+            if val == '.':
+                segment_len += 1
+                blanks_count += 1
+                consecutive_blanks += 1
+                if blank_set_up(state, row, col):
+                    blanks_set_up_count += 1
+                    set_up_count_of_consecutive_blanks +=1 
+
+            elif current_segment_colour == "red":
+                if val == 'r':
+                    segment_len += 1
+                    tokens_count += 1
+                    edges_count += 1 if prev_val == 'r' else edges_count
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                elif val == 'y':
+                    # PREV SEGMENT COMPLETE: update heuristic scores
+                    red_neg_diag_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                    # begin next segment - may overlap and include blanks right before it - reset all varaibles
+                    segment_len = consecutive_blanks + 1
+                    blanks_count = consecutive_blanks
+                    blanks_set_up_count = set_up_count_of_consecutive_blanks
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                    current_segment_colour = "yellow"
+                    tokens_count = 1
+                    edges_count = 0
+                else:
+                    print("invalid matrix character")
+
+            elif current_segment_colour == "yellow":             
+                if val == 'y':
+                    segment_len += 1
+                    tokens_count += 1
+                    edges_count += 1 if prev_val == 'y' else edges_count
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                elif val == 'r':
+                    # PREV SEGMENT COMPLETE: update heuristic scores
+                    yel_neg_diag_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                    # begin next segment - may overlap and include blanks right before it - reset all varaibles
+                    segment_len = consecutive_blanks + 1
+                    blanks_count = consecutive_blanks
+                    blanks_set_up_count = set_up_count_of_consecutive_blanks
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                    current_segment_colour = "red"
+                    tokens_count = 1
+                    edges_count = 0
+                else:
+                    print("invalid matrix character")
             
-            # TODO: set diag to false if token found
+            # the first token has been found: it determines the colour of the first segment
+            elif current_segment_colour == "":
+                if val == 'r':
+                    current_segment_colour = "red"
+                    segment_len += 1
+                    tokens_count += 1
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                elif val == 'y':
+                    current_segment_colour = "yellow"
+                    segment_len += 1
+                    tokens_count += 1
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0                
+                else:
+                    print("invalid matrix character")
+            
+            else:
+                print("invalid segment colour")
+
+            # update prev value
+            prev_val = val
 
             # update row and column to continue down the diagonal
             col -= 1 # left
             row += 1 # up
-        # set as empty diag if empty - or just change min_col
-        if empty_diag:
-            min_col = initial_col + 1
 
+            # check if you've reached the end of the diag's traversal
+            if col < min_col or row > 5:
+                if current_segment_colour == "red":
+                    red_neg_diag_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                elif current_segment_colour == "yellow":
+                    yel_neg_diag_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+    # part 2
     # starting row = 5
-    for col in range(2,7):
+    for col in range(2,4):
         # neg diag part 2: initial row always 5 (purple)
         row = 5
-        empty_diag = True
+
+        # optimisation: check if previous diagonal was all empty
+        if blanks_count > 0 and tokens_count == 0:
+            # these diagonals don't start from the bottom row and thus are all above empty spaces
+            break
+
+        # variables used for heuristic calculation, for a given segment:
+        current_segment_colour = "" # inital segment colour is determined after the first token is found (then the blanks are apart of its segment)
+        segment_len = 0
+        tokens_count = 0
+        edges_count = 0
+        prev_val = '' # used for checking for edges (consecutive tokens)
+        blanks_count = 0
+        blanks_set_up_count = 0 # count the num blanks set_up - ie able to have a token placed there without requiring below positions to be filled with tokens
+
         while col <= 6:
             val = state[row, col]
 
-            # TODO: set empty_diag to False if a token is found on any iteration
-        
+            # val is a blank - update variables the same way no matter current_segment_colour
+            if val == '.':
+                segment_len += 1
+                blanks_count += 1
+                consecutive_blanks += 1
+                if blank_set_up(state, row, col):
+                    blanks_set_up_count += 1
+                    set_up_count_of_consecutive_blanks += 1 
+
+            elif current_segment_colour == "red":
+                if val == 'r':
+                    segment_len += 1
+                    tokens_count += 1
+                    edges_count += 1 if prev_val == 'r' else edges_count
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                elif val == 'y':
+                    # PREV SEGMENT COMPLETE: update heuristic scores
+                    red_neg_diag_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                    # begin next segment - may overlap and include blanks right before it - reset all varaibles
+                    segment_len = consecutive_blanks + 1
+                    blanks_count = consecutive_blanks
+                    blanks_set_up_count = set_up_count_of_consecutive_blanks
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                    current_segment_colour = "yellow"
+                    tokens_count = 1
+                    edges_count = 0
+                else:
+                    print("invalid matrix character")
+
+            elif current_segment_colour == "yellow":             
+                if val == 'y':
+                    segment_len += 1
+                    tokens_count += 1
+                    edges_count += 1 if prev_val == 'y' else edges_count
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                elif val == 'r':
+                    # PREV SEGMENT COMPLETE: update heuristic scores
+                    yel_neg_diag_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                    # begin next segment - may overlap and include blanks right before it - reset all varaibles
+                    segment_len = consecutive_blanks + 1
+                    blanks_count = consecutive_blanks
+                    blanks_set_up_count = set_up_count_of_consecutive_blanks
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                    current_segment_colour = "red"
+                    tokens_count = 1
+                    edges_count = 0
+                else:
+                    print("invalid matrix character")
+            
+            # the first token has been found: it determines the colour of the first segment
+            elif current_segment_colour == "":
+                if val == 'r':
+                    current_segment_colour = "red"
+                    segment_len += 1
+                    tokens_count += 1
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                elif val == 'y':
+                    current_segment_colour = "yellow"
+                    segment_len += 1
+                    tokens_count += 1
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0                
+                else:
+                    print("invalid matrix character")
+            
+            else:
+                print("invalid segment colour")
 
             col += 1 # right
             row -= 1 # down
-        if empty_diag:
-            break
+
+            # update prev value
+            prev_val = val
+
+            # check if end of diag - segment
+            if col == 6:
+                if current_segment_colour == "red":
+                    red_neg_diag_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                elif current_segment_colour == "yellow":
+                    yel_neg_diag_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
 
     # POSITIVE DIAGONAL TRAVERSALS
+    # part 1
     max_col = 6
-    for col in range(6, -1, -1): # 6, 5, 4, 3, 2, 1, 0
+    tokens_count = 0
+    blanks_count = 0
+    for col in range(3, -1, -1): # 3, 2, 1, 0
+        # part 1: diagonals that start from bottom row
         row = 0
-        initial_col = col
-        empty_diag = True # keep true if no tokens are found
+        # optimisation: check if previous diagonal was all empty
+        if blanks_count > 0 and tokens_count == 0:
+            max_col = col # new col is the max you can go (everything to the left is empty)
+
+        # variables used for heuristic calculation, for a given segment:
+        current_segment_colour = "" # inital segment colour is determined after the first token is found (then the blanks are apart of its segment)
+        segment_len = 0
+        tokens_count = 0
+        edges_count = 0
+        prev_val = '' # used for checking for edges (consecutive tokens)
+        blanks_count = 0
+        blanks_set_up_count = 0 # count the num blanks set_up - ie able to have a token placed there without requiring below positions to be filled with tokens
+
         while row <= 5 and col <= max_col:
             val = state[row, col]
 
-            # TODO: set empty_diag to False if a token is found on any iteration
+            # val is a blank - update variables the same way no matter current_segment_colour
+            if val == '.':
+                segment_len += 1
+                blanks_count += 1
+                consecutive_blanks += 1
+                if blank_set_up(state, row, col):
+                    blanks_set_up_count += 1
+                    set_up_count_of_consecutive_blanks +=1 
+
+            elif current_segment_colour == "red":
+                if val == 'r':
+                    segment_len += 1
+                    tokens_count += 1
+                    edges_count += 1 if prev_val == 'r' else edges_count
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                elif val == 'y':
+                    # PREV SEGMENT COMPLETE: update heuristic scores
+                    red_pos_diag_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                    # begin next segment - may overlap and include blanks right before it - reset all varaibles
+                    segment_len = consecutive_blanks + 1
+                    blanks_count = consecutive_blanks
+                    blanks_set_up_count = set_up_count_of_consecutive_blanks
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                    current_segment_colour = "yellow"
+                    tokens_count = 1
+                    edges_count = 0
+                else:
+                    print("invalid matrix character")
+
+            elif current_segment_colour == "yellow":             
+                if val == 'y':
+                    segment_len += 1
+                    tokens_count += 1
+                    edges_count += 1 if prev_val == 'y' else edges_count
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                elif val == 'r':
+                    # PREV SEGMENT COMPLETE: update heuristic scores
+                    yel_pos_diag_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                    # begin next segment - may overlap and include blanks right before it - reset all varaibles
+                    segment_len = consecutive_blanks + 1
+                    blanks_count = consecutive_blanks
+                    blanks_set_up_count = set_up_count_of_consecutive_blanks
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                    current_segment_colour = "red"
+                    tokens_count = 1
+                    edges_count = 0
+                else:
+                    print("invalid matrix character")
+            
+            # the first token has been found: it determines the colour of the first segment
+            elif current_segment_colour == "":
+                if val == 'r':
+                    current_segment_colour = "red"
+                    segment_len += 1
+                    tokens_count += 1
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                elif val == 'y':
+                    current_segment_colour = "yellow"
+                    segment_len += 1
+                    tokens_count += 1
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0                
+                else:
+                    print("invalid matrix character")
+            
+            else:
+                print("invalid segment colour")
 
             # update row and coloumn to continue up the diagonal
             col += 1 # right
-            row += 1 # up
-        
-        if empty_diag:
-            max_col = initial_col - 1
+            row += 1 # up'
 
-    for row in range(0,5):
+            # update prev value
+            prev_val = val
+
+            # check if you've reached the end of the diag's traversal
+            if row > 5 or col > max_col:
+                if current_segment_colour == "red":
+                    red_pos_diag_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                elif current_segment_colour == "yellow":
+                    yel_pos_diag_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+    # part 2
+    for row in range(1, 3):
+        # part 2: inital col always 0, for traversals
         col = 0
-        empty_diag = True
+
+        # optimisation: check if below diag is all empty:
+        if blanks_count > 0 and tokens_count == 0:
+            # these diagonals don't start from the bottom row and thus are all above empty spaces
+            break 
+
+        # variables used for heuristic calculation, for a given segment:
+        current_segment_colour = "" # inital segment colour is determined after the first token is found (then the blanks are apart of its segment)
+        segment_len = 0
+        tokens_count = 0
+        edges_count = 0
+        prev_val = '' # used for checking for edges (consecutive tokens)
+        blanks_count = 0
+        blanks_set_up_count = 0 # count the num blanks set_up - ie able to have a token placed there without requiring below positions to be filled with tokens
+
         while row <= 5:
             val = state[row, col]
 
-            # TODO: set empty_diag false if a token is found
+            # val is a blank - update variables the same way no matter current_segment_colour
+            if val == '.':
+                segment_len += 1
+                blanks_count += 1
+                consecutive_blanks += 1
+                if blank_set_up(state, row, col):
+                    blanks_set_up_count += 1
+                    set_up_count_of_consecutive_blanks += 1 
+
+            elif current_segment_colour == "red":
+                if val == 'r':
+                    segment_len += 1
+                    tokens_count += 1
+                    edges_count += 1 if prev_val == 'r' else edges_count
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                elif val == 'y':
+                    # PREV SEGMENT COMPLETE: update heuristic scores
+                    red_neg_diag_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                    # begin next segment - may overlap and include blanks right before it - reset all varaibles
+                    segment_len = consecutive_blanks + 1
+                    blanks_count = consecutive_blanks
+                    blanks_set_up_count = set_up_count_of_consecutive_blanks
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                    current_segment_colour = "yellow"
+                    tokens_count = 1
+                    edges_count = 0
+                else:
+                    print("invalid matrix character")
+
+            elif current_segment_colour == "yellow":             
+                if val == 'y':
+                    segment_len += 1
+                    tokens_count += 1
+                    edges_count += 1 if prev_val == 'y' else edges_count
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                elif val == 'r':
+                    # PREV SEGMENT COMPLETE: update heuristic scores
+                    yel_neg_diag_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                    # begin next segment - may overlap and include blanks right before it - reset all varaibles
+                    segment_len = consecutive_blanks + 1
+                    blanks_count = consecutive_blanks
+                    blanks_set_up_count = set_up_count_of_consecutive_blanks
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                    current_segment_colour = "red"
+                    tokens_count = 1
+                    edges_count = 0
+                else:
+                    print("invalid matrix character")
+            
+            # the first token has been found: it determines the colour of the first segment
+            elif current_segment_colour == "":
+                if val == 'r':
+                    current_segment_colour = "red"
+                    segment_len += 1
+                    tokens_count += 1
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0
+                elif val == 'y':
+                    current_segment_colour = "yellow"
+                    segment_len += 1
+                    tokens_count += 1
+                    consecutive_blanks = 0
+                    set_up_count_of_consecutive_blanks = 0                
+                else:
+                    print("invalid matrix character")
+            
+            else:
+                print("invalid segment colour")
 
             # update row and coloumn to continue up the diagonal
             col += 1 # right
             row += 1 # up
-        
-        if empty_diag:
-            break
 
-    
+            # update prev value
+            prev_val = val
+
+            # check if end of diag - segment
+            if row == 5:
+                if current_segment_colour == "red":
+                    red_neg_diag_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+                elif current_segment_colour == "yellow":
+                    yel_neg_diag_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count)
+        
     # sum players' total value
     red_total_heuristic = red_row_heuristic_sum + red_col_heuristic_sum + red_pos_diag_heuristic_sum + red_neg_diag_heuristic_sum
     yel_total_heuristic = yel_row_heuristic_sum + yel_col_heuristic_sum + yel_pos_diag_heuristic_sum + yel_neg_diag_heuristic_sum
