@@ -2,6 +2,16 @@
 
 import sys
 import math
+import numpy as np
+
+def opponent(player):
+    if player == "red":
+        return "yellow"
+    elif player == "yellow":
+        return "red"
+    else:
+        print("Invalid player colour: must be yellow or red")
+        return 
 
 def player_to_index(player):
     if player == "red":
@@ -21,157 +31,164 @@ def colour_to_char(player):
         # print("Invalid player colour: must be yellow or red")
         return
 
-def tokens_in_row(count, player_i, total_counts):
-    try:
-        return total_counts[(player_i, count)]
-    except KeyError:
-        # print(f"invalid count valid given: Key {(player_i, count)}")
-        return
+# def tokens_in_row(count, player_i, total_counts):
+#     try:
+#         return total_counts[(player_i, count)]
+#     except KeyError:
+#         # print(f"invalid count valid given: Key {(player_i, count)}")
+#         return
 
-def update_count(adjacent_count, player_i, total_counts):
-    if adjacent_count > 4:
-        adjacent_count = 4
-    try:
-        total_counts[(player_i, adjacent_count)] += 1
-    except KeyError:
-        # print(f"invalid adjacent count: Key {(player_i, adjacent_count)}")
-        return
+# def update_count(adjacent_count, player_i, total_counts):
+#     if adjacent_count > 4:
+#         adjacent_count = 4
+#     try:
+#         total_counts[(player_i, adjacent_count)] += 1
+#     except KeyError:
+#         # print(f"invalid adjacent count: Key {(player_i, adjacent_count)}")
+#         return
 
-# TODO: if a row has no tokens the rows above don't need to be traversed
-def count_consecutive_pieces(state):
+# TODO: optimise traversals 
+def state_heuristic(state: np.matrix, player: str): 
 
-    single_counts = {player_i : 0 for player_i in [0, 1]}
-    total_counts = {(player_i, length) : 0 for player_i in [0, 1] for length in [2, 3, 4]}
+    # red counts - store separately for purpose of analysing our heuristic
+    red_row_heuristic_sum = 0
+    red_col_heuristic_sum = 0
+    red_pos_diag_heuristic_sum = 0
+    red_neg_diag_heuristic_sum = 0
 
-    for player in ['red', 'yellow']:
-        player_i = player_to_index(player)
-        token = colour_to_char(player)
+    # yellow counts
+    yel_row_heuristic_sum = 0
+    yel_col_heuristic_sum = 0
+    yel_pos_diag_heuristic_sum = 0
+    yel_neg_diag_heuristic_sum = 0
+    
+    # players' total counts (calc at end)
+    red_total_heuristic = 0
+    yel_total_heuristic = 0
 
-        # HORIZONTAL/ROW TRAVERSALS - note if row has ≤1 token in it then there's no point checking the row/s above it
+    # players' difference: state heuristic (calc & returned at end)
+    state_heuristic = 0
+
+    # player_i = player_to_index(player)
+    # token = colour_to_char(player)
+
+    # COLUMN TRAVERSALS 
+    for col in range(7):
         for row in range(6):
-            # for the current row, iterate across each value in it (so column index)
-            adjacent_count = 0 
-            for col in range(7):
-                val = state[row][col]
-                if val == token:
-                    adjacent_count += 1
-                    # use the row traversals to count the total tokens of the play
-                    single_counts[player_i] += 1
-                # blank or other players token
-                else:
-                    # record previous tokens in a row
-                    update_count(adjacent_count, player_i, total_counts)
-                    # reset to 0 tokens in a row
-                    adjacent_count = 0
-            if adjacent_count > 1:
-                update_count(adjacent_count, player_i, total_counts)
-        
-        # COLUMN TRAVERSALS 
+            val = state[row][col]
+            # optimising case: if a position is empty, all above positions are
+            if val == '.':
+                # TODO: optimise - complete this column data within this loop (given all above are blanks) & break to next col
+                break
+            
+    # HORIZONTAL/ROW TRAVERSALS 
+    for row in range(6):
+        # variables to update each row
+        empty_row = False
         for col in range(7):
-            # for the current coloumn, iterate each row value of the column
-            adjacent_count = 0
-            for row in range(6):
-                val = state[row][col]
-                if val == token:
-                    adjacent_count += 1
-                else:
-                    # record previous tokens in a row
-                    update_count(adjacent_count, player_i, total_counts)
-                    # reset to 0 tokens in a row
-                    adjacent_count = 0
-            if adjacent_count > 1:
-                update_count(adjacent_count, player_i, total_counts)
+            # optimising case: if a row is empty, all above rows don't need to be traversed
+            if empty_row:
+                break
+            val = state[row][col]
+
+            # TODO: set row to empty if all blanks
+    
+    # NEGATIVE DIAGONAL TRAVERSALS (negative gradient) -> decrease row (down) and increase column (right)
+    
+    min_col = 0 # for optimisaton: if a given column has a lower elemnt found empty, all above are empty 
+    # starting col = 0
+    for col in range(0,7):
+        # neg diag part 1: initial row is always 0 (blue)
+        row = 0
+        initial_col = col
+        # variable for optimisation
+        empty_diag = True
+        while row <= 5 and col >= min_col:
+            val = state[row][col]
+
+            
+            # TODO: set diag to false if token found
+
+            # update row and column to continue down the diagonal
+            col -= 1 # left
+            row += 1 # up
+        # set as empty diag if empty - or just change min_col
+        if empty_diag:
+            min_col = initial_col + 1
+
+    # starting row = 5
+    for col in range(2,7):
+        # neg diag part 2: initial row always 5 (purple)
+        row = 5
+        empty_diag = True
+        while col <= 6:
+            val = state[row][col]
+
+            # TODO: set empty_diag to False if a token is found on any iteration
         
-        # NEGATIVE DIAGONAL TRAVERSALS (negative as in negative gradient) -> decrease row (down) and increase column (right)
-        # starting col = 0
-        for row in range(1,6):
-            col = 0
-            adjacent_count = 0
-            while row >= 0 and col <=6:
-                val = state[row][col]
-                if val == token:
-                    adjacent_count += 1
-                else:
-                    # record previous tokens in a row
-                    update_count(adjacent_count, player_i, total_counts)
-                    # reset to 0 tokens in a row
-                    adjacent_count = 0
-                # update row and coloumn to continue down the diagonal
-                col += 1 # right
-                row -= 1 # down
-            if adjacent_count > 1:
-                update_count(adjacent_count, player_i, total_counts)
-        # starting row = 5
-        for col in range(1,6):
-            row = 5
-            adjacent_count = 0
-            while row >= 0 and col <= 6:
-                val = state[row][col]
-                if val == token:
-                    adjacent_count += 1
-                else:
-                    # record previous tokens in a row
-                    update_count(adjacent_count, player_i, total_counts)
-                    # reset to 0 tokens in a row
-                    adjacent_count = 0
-                # update row and coloumn to continue down the diagonal
-                col += 1 # right
-                row -= 1 # down
-            if adjacent_count > 1:
-                update_count(adjacent_count, player_i, total_counts)
 
-        # POSITIVE DIAGONAL TRAVERSALS
-        for row in range(0,5):
-            col = 0
-            adjacent_count = 0
-            while row <= 5 and col <= 6:
-                val = state[row][col]
-                if val == token:
-                    adjacent_count += 1
-                else:
-                    # record previous tokens in a row
-                    update_count(adjacent_count, player_i, total_counts)
-                    # reset to 0 tokens in a row
-                    adjacent_count = 0
-                # update row and coloumn to continue up the diagonal
-                col += 1 # right
-                row += 1 # up
-            if adjacent_count > 1:
-                update_count(adjacent_count, player_i, total_counts)
+            col += 1 # right
+            row -= 1 # down
+        if empty_diag:
+            break
 
-        for col in range(1, 6):
-            row = 0
-            adjacent_count = 0
-            while row <= 5 and col <= 6:
-                val = state[row][col]
-                if val == token:
-                    adjacent_count += 1
-                else:
-                    # record previous tokens in a row
-                    update_count(adjacent_count, player_i, total_counts)
-                    # reset to 0 tokens in a row
-                    adjacent_count = 0
-                # update row and coloumn to continue up the diagonal
-                col += 1 # right
-                row += 1 # up
-            if adjacent_count > 1:
-                update_count(adjacent_count, player_i, total_counts)
-    # print(total_counts)
+    # POSITIVE DIAGONAL TRAVERSALS
+    max_col = 6
+    for col in range(6, -1, -1): # 6, 5, 4, 3, 2, 1, 0
+        row = 0
+        initial_col = col
+        empty_diag = True # keep true if no tokens are found
+        while row <= 5 and col <= max_col:
+            val = state[row][col]
 
-    return single_counts, total_counts
+            # TODO: set empty_diag to False if a token is found on any iteration
 
-def score(single_counts_player, total_counts_player):
-    return 10*total_counts_player[2] + 100*total_counts_player[3] + 1000*total_counts_player[4] + single_counts_player
+            # update row and coloumn to continue up the diagonal
+            col += 1 # right
+            row += 1 # up
+        
+        if empty_diag:
+            max_col = initial_col - 1
 
-def evaluation(single_counts, total_counts):
-    return score(single_counts[0], {i : total_counts[0, i] for i in [2, 3, 4]}) - score(single_counts[1], {i : total_counts[1, i] for i in [2, 3, 4]})
+    for row in range(0,5):
+        col = 0
+        empty_diag = True
+        while row <= 5:
+            val = state[row][col]
 
-def utility(total_counts):
-    if total_counts[0, 4]: # red: player_i = 0
-        return 10000
-    if total_counts[1, 4]: # yellow: player_i = 1
-        return -10000
-    # ELSE: return nothing??
+            # TODO: set empty_diag false if a token is found
+
+            # update row and coloumn to continue up the diagonal
+            col += 1 # right
+            row += 1 # up
+        
+        if empty_diag:
+            break
+
+    
+    # sum players' total value
+    red_total_heuristic = red_row_heuristic_sum + red_col_heuristic_sum + red_pos_diag_heuristic_sum + red_neg_diag_heuristic_sum
+    yel_total_heuristic = yel_row_heuristic_sum + yel_col_heuristic_sum + yel_pos_diag_heuristic_sum + yel_neg_diag_heuristic_sum
+
+    # calculate state heuristic according to player & return
+    if player == "red":
+        state_heuristic = red_total_heuristic - yel_total_heuristic
+    if player == "yellow":
+        state_heuristic =  yel_total_heuristic - red_total_heuristic
+    else:
+        print("Invalid player colour: must be yellow or red")
+        return        
+    return state_heuristic
+
+# def score(single_counts_player, total_counts_player):
+#     return 10*total_counts_player[2] + 100*total_counts_player[3] + 1000*total_counts_player[4] + single_counts_player
+
+# def utility(total_counts):
+#     if total_counts[0, 4]: # red: player_i = 0
+#         return 10000
+#     if total_counts[1, 4]: # yellow: player_i = 1
+#         return -10000
+#     # ELSE: return nothing??
 
 def print_board(state):
     print()
@@ -180,8 +197,9 @@ def print_board(state):
 
 def decode(string):
     rows = string.split(",")
-    grid = list(list(char for char in row) for row in rows) # rows on ouside lists - list of lists
-    return grid
+    # grid = list(list(char for char in row) for row in rows) # rows on ouside lists - list of lists
+    matrix = np.matrix([[char for char in row] for row in rows])
+    return matrix
 
 def drop_piece(state, col, is_red):
     colour = 'r' if is_red else 'y'
