@@ -47,6 +47,21 @@ def colour_to_char(player):
 #         # print(f"invalid adjacent count: Key {(player_i, adjacent_count)}")
 #         return
 
+def blank_setup(state, row, col):
+    # don't check for valid input - will waste time in tournament # TODO: delete this input validity check once code is working
+    if row < 0 or row > 5 or col < 0 or col > 6:
+        print("invalid input")
+        return
+    if row == 0:
+        return True
+    return not state[row-1, col] == '.'
+
+def segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_setup_count):
+    # calculate factors
+    blanks_setup_factor = 1 + 0.2*(blanks_setup_count/blanks_count)
+    token_edge_factor = 1 + 0.5*(edges_count/(tokens_count-1))
+    return (1.5*tokens_count + blanks_count) * blanks_setup_factor * token_edge_factor
+
 # TODO: optimise traversals 
 def state_heuristic(state: np.matrix, player: str): 
 
@@ -69,17 +84,97 @@ def state_heuristic(state: np.matrix, player: str):
     # players' difference: state heuristic (calc & returned at end)
     state_heuristic = 0
 
-    # player_i = player_to_index(player)
-    # token = colour_to_char(player)
-
     # COLUMN TRAVERSALS 
     for col in range(7):
+        # variables used for heuristic calculation, for a given segment:
+        current_segment_colour = "" # inital segment colour is determined after the first token is found (then the blanks are apart of its segment)
+        segment_len = 0
+        tokens_count = 0
+        edges_count = 0
+        prev_val = '' # used for checking for edges (consecutive tokens)
+        blanks_count = 0
+        consecutive_blanks = 0 # used for when segment changes player (overlap section of segments)
+        blanks_setup_count = 0 # count the num blanks setup - ie able to have a token placed there without requiring below positions to be filled with tokens
+        setup_count_of_consecutive_blanks = 0
+
         for row in range(6):
-            val = state[row][col]
+            val = state[row, col]
+            # val is a blank - update variables the same way no matter current_segment_colour
+            if val == '.':
+                segment_len += 1
+                blanks_count += 1
+                consecutive_blanks += 1
+                if blank_setup(state, row, col):
+                    blanks_setup_count += 1
+                    setup_count_of_consecutive_blanks +=1 
+
+            elif current_segment_colour == "red":
+                if val == '.':
+                    segment_len += 1
+                    blanks_count += 1
+                    consecutive_blanks += 1
+                    if blank_setup(state, row, col):
+                        blanks_setup_count += 1
+                        setup_count_of_consecutive_blanks +=1
+                elif val == 'r':
+                    segment_len += 1
+                    tokens_count += 1
+                    edges_count += 1 if prev_val == 'r' else edges_count
+                    consecutive_blanks = 0
+                    setup_count_of_consecutive_blanks = 0
+                elif val == 'y':
+                    # PREV SEGMENT COMPLETE: update heuristic scores
+                    red_col_heuristic_sum += segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_setup_count)
+                    # begin next segment - may overlap and include blanks right before it - reset all varaibles
+                    segment_len = consecutive_blanks + 1
+                    blanks_count = consecutive_blanks
+                    blanks_setup_count = setup_count_of_consecutive_blanks
+                    consecutive_blanks = 0
+                    setup_count_of_consecutive_blanks = 0
+                    current_segment_colour = "yellow"
+                    tokens_count = 1
+                    edges_count = 0
+                else:
+                    print("invalid matrix character")
+
+            elif current_segment_colour == "yellow":
+                if val == '.':
+                    segment_len += 1
+                    blanks_count += 1
+                    consecutive_blanks += 1
+                    if blank_setup(state, row, col):
+                        blanks_setup_count += 1
+                        setup_count_of_consecutive_blanks +=1                
+                elif val == 'r':
+                elif val == 'y':
+                
+                else:
+                    print("invalid matrix character")
+            
+            elif current_segment_colour == "":
+                if val == '.':
+                
+                elif val == 'r':
+                
+                elif val == 'y':
+                
+                else:
+                    print("invalid matrix character")
+            
+            else:
+                print("invalid segment colour")
+
+
+            if val == 'r':
+
+
             # optimising case: if a position is empty, all above positions are
             if val == '.':
                 # TODO: optimise - complete this column data within this loop (given all above are blanks) & break to next col
                 break
+
+            # update previous val
+            prev_val = val
             
     # HORIZONTAL/ROW TRAVERSALS 
     for row in range(6):
@@ -89,7 +184,7 @@ def state_heuristic(state: np.matrix, player: str):
             # optimising case: if a row is empty, all above rows don't need to be traversed
             if empty_row:
                 break
-            val = state[row][col]
+            val = state[row, col]
 
             # TODO: set row to empty if all blanks
     
@@ -104,7 +199,7 @@ def state_heuristic(state: np.matrix, player: str):
         # variable for optimisation
         empty_diag = True
         while row <= 5 and col >= min_col:
-            val = state[row][col]
+            val = state[row, col]
 
             
             # TODO: set diag to false if token found
@@ -122,7 +217,7 @@ def state_heuristic(state: np.matrix, player: str):
         row = 5
         empty_diag = True
         while col <= 6:
-            val = state[row][col]
+            val = state[row, col]
 
             # TODO: set empty_diag to False if a token is found on any iteration
         
@@ -139,7 +234,7 @@ def state_heuristic(state: np.matrix, player: str):
         initial_col = col
         empty_diag = True # keep true if no tokens are found
         while row <= 5 and col <= max_col:
-            val = state[row][col]
+            val = state[row, col]
 
             # TODO: set empty_diag to False if a token is found on any iteration
 
@@ -154,7 +249,7 @@ def state_heuristic(state: np.matrix, player: str):
         col = 0
         empty_diag = True
         while row <= 5:
-            val = state[row][col]
+            val = state[row, col]
 
             # TODO: set empty_diag false if a token is found
 
@@ -204,15 +299,15 @@ def decode(string):
 def drop_piece(state, col, is_red):
     colour = 'r' if is_red else 'y'
     for row in range(6):
-        if state[row][col] == '.':
-            state[row][col] = colour
+        if state[row, col] == '.':
+            state[row, col] = colour
             return True
     return False
 
 def remove_piece(state, col):
     for row in range(5, -1, -1):
-        if state[row][col] != '.':
-            state[row][col] = '.'
+        if state[row, col] != '.':
+            state[row, col] = '.'
             return True
     print("REMOVAL ERROR!")
     return False
