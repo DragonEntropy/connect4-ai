@@ -61,7 +61,7 @@ def segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blan
         return 0
     # calculate factors
     blanks_set_up_factor = 1 + 0.2*(blanks_set_up_count/blanks_count)
-    token_edge_factor = 0 if (tokens_count <= 1) else 1 + 0.5*(edges_count/(tokens_count-1))
+    token_edge_factor = 1 if (tokens_count <= 1) else 1 + 0.5*(edges_count/(tokens_count-1))
     return (1.5*tokens_count + blanks_count) * blanks_set_up_factor * token_edge_factor
 
 # TODO: optimise traversals 
@@ -750,6 +750,7 @@ def evaluation(state, last_col):
         if state[row, last_col] == last_piece:
             num_in_a_row += 1
             if num_in_a_row == 4:
+                #print(f"Vert win at ({last_col}, {last_row}) for {last_piece}")
                 return last_piece
         else:
             num_in_a_row = 0
@@ -760,6 +761,7 @@ def evaluation(state, last_col):
         if state[last_row, col] == last_piece:
             num_in_a_row += 1
             if num_in_a_row == 4:
+                #print(f"Hori win at ({last_col}, {last_row}) for {last_piece}")
                 return last_piece
         else:
             num_in_a_row = 0
@@ -772,6 +774,7 @@ def evaluation(state, last_col):
         if state[last_row + i, last_col + i] == last_piece:
             num_in_a_row += 1
             if num_in_a_row == 4:
+                #print(f"Diag + win at ({last_col}, {last_row}) for {last_piece}")
                 return last_piece
         else:
             num_in_a_row = 0
@@ -784,6 +787,7 @@ def evaluation(state, last_col):
         if state[last_row - i, last_col + i] == last_piece:
             num_in_a_row += 1
             if num_in_a_row == 4:
+                #print(f"Diag - win at ({last_col}, {last_row}) for {last_piece}")
                 return last_piece
         else:
             num_in_a_row = 0
@@ -878,7 +882,7 @@ def connect_four(contents, turn):
             is_terminal = (current_depth == max_depth - 1) or util
             if is_terminal:
                 if util:
-                    score = math.inf
+                    score = math.inf * (1 if (util == 'r') else -1)
                 else: 
                     score = state_heuristic(current_state, turn)
                 score *= (1 if (turn == "red") else -1)
@@ -933,7 +937,7 @@ def connect_four(contents, turn):
         
 
     nodes_examined += 1 
-    # print(f"Score: {scores_stack[0]}, Nodes: {nodes_examined}")
+    print(f"Score: {scores_stack[0]}, Nodes: {nodes_examined}")
     return best_choice
 
 if __name__ == '__main__':
