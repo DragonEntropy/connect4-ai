@@ -5,7 +5,7 @@ import math
 import numpy as np
 
 global params
-params = [0.2, 0.5]
+params = [0.2, 0.5, 0.1]
 
 def opponent(player):
     if player == "red":
@@ -68,12 +68,6 @@ def segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blan
     token_edge_factor = 1 if (tokens_count <= 1) else 1 + params[1]*(edges_count/(tokens_count-1))
     return (1.5*tokens_count + blanks_count) * blanks_set_up_factor * token_edge_factor
 
-def count_turns(state):
-    turns = 0
-    for row in state:
-        for cell in state:
-            turns += (cell != '.')
-    return turns
 
 def count_wins(state, is_red):
     if is_red:
@@ -109,15 +103,9 @@ def count_wins(state, is_red):
     
     return wins
 
-def state_heuristic_2(state: np.matrix): 
-    pos_heuristic = count_wins(state, True)
-    neg_heuristic = count_wins(state, False)
-    
-    state_heuristic = pos_heuristic - neg_heuristic  
-    return state_heuristic
 
 # TODO: optimise traversals 
-def state_heuristic_1(state: np.matrix):
+def state_heuristic(state: np.matrix):
 
     # red counts - store separately for purpose of analysing our heuristic
     red_row_heuristic_sum = 0
@@ -879,11 +867,10 @@ def remove_piece(state, col):
 def connect_four(contents, turn, *args):
     max_depth = 5
     current_state = decode(contents)
-    turns = count_turns(current_state)
     move_index_order = [3, 2, 4, 1, 5, 0, 6]
     
     global params
-    if len(*args) == 3:
+    if len(*args) == 2:
         params = list(*args)
 
     # Using a stack to implement recursion. Needs to track:
@@ -933,7 +920,7 @@ def connect_four(contents, turn, *args):
                 if util:
                     score = math.inf * (1 if (util == 'r') else -1)
                 else: 
-                    score = state_heuristic_1(current_state) + args[2] * state_heuristic_2(current_state) * (turns + current_depth + 1)
+                    score = state_heuristic(current_state)
                 score *= (1 if (turn == "red") else -1)
 
                 # store old_score and score: two given states comparing instead of comparing all 7 states at the end
