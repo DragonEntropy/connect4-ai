@@ -937,7 +937,7 @@ def connect_four(contents, turn, *args):
         
 
     nodes_examined += 1 
-    print(f"Score: {scores_stack[0]}, Nodes: {nodes_examined}")
+    #print(f"Score: {scores_stack[0]}, Nodes: {nodes_examined}")
     return best_choice
 
 if __name__ == '__main__':
@@ -949,4 +949,4 @@ if __name__ == '__main__':
     else:
         board = sys.argv[1]
         player = sys.argv[2]
-    #print(connect_four(board, player))
+    print(connect_four(board, player))
