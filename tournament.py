@@ -4,6 +4,9 @@ import sys
 import math
 import numpy as np
 
+global params
+params = [0.2, 0.5]
+
 def opponent(player):
     if player == "red":
         return "yellow"
@@ -57,15 +60,16 @@ def blank_set_up(state, row, col):
     return not state[row-1, col] == '.'
 
 def segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blanks_set_up_count):
+    global params
     if segment_len < 4 or tokens_count <= 0:
         return 0
     # calculate factors
-    blanks_set_up_factor = 1 + 0.2*(blanks_set_up_count/blanks_count)
-    token_edge_factor = 1 if (tokens_count <= 1) else 1 + 0.5*(edges_count/(tokens_count-1))
+    blanks_set_up_factor = 1 + params[0]*(blanks_set_up_count/blanks_count)
+    token_edge_factor = 1 if (tokens_count <= 1) else 1 + params[1]*(edges_count/(tokens_count-1))
     return (1.5*tokens_count + blanks_count) * blanks_set_up_factor * token_edge_factor
 
 # TODO: optimise traversals 
-def state_heuristic(state: np.matrix): 
+def state_heuristic(state: np.matrix):
 
     # red counts - store separately for purpose of analysing our heuristic
     red_row_heuristic_sum = 0
@@ -824,11 +828,14 @@ def remove_piece(state, col):
     print("REMOVAL ERROR!")
     return False
 
-def connect_four(contents, turn):
+def connect_four(contents, turn, *args):
     max_depth = 5
     current_state = decode(contents)
     move_index_order = [3, 2, 4, 1, 5, 0, 6]
     
+    if len(args) == 2:
+        global params
+        params = list(args)
 
     # Using a stack to implement recursion. Needs to track:
     #   The path along the DFS search
@@ -942,4 +949,4 @@ if __name__ == '__main__':
     else:
         board = sys.argv[1]
         player = sys.argv[2]
-    print(connect_four(board, player))
+    #print(connect_four(board, player))

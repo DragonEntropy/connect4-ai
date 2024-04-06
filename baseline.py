@@ -199,7 +199,7 @@ def remove_piece(state, col):
     print("REMOVAL ERROR!")
     return False
 
-def connect_four(contents, turn):
+def connect_four(contents, turn, *args):
     max_depth = 5
     current_state = decode(contents)
 
