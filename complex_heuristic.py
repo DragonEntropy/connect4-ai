@@ -870,8 +870,9 @@ def connect_four(contents, turn, *args):
     move_index_order = [3, 2, 4, 1, 5, 0, 6]
     
     global params
-    if len(*args) == 2:
-        params = list(*args)
+    if args:
+        if len(*args) == 2:
+            params = list(*args)
 
     # Using a stack to implement recursion. Needs to track:
     #   The path along the DFS search

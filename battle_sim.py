@@ -73,10 +73,10 @@ def generate_players():
     players.append(Model(baseline, "baseline"))
     players.append(Model(simple, "simple"))
     players.append(Model(complex, "complex", 0.3, 0.4))
-    for i in range(7):
+    for i in range(1):
         c = 0.1 * randint(0, 10)
         players.append(Model(challenger, f"challenger(0.3, 0.4, {c:.1f})", 0.3, 0.4, c))
-    for i in range(10):
+    for i in range(1):
         a = 0.1 * randint(0, 10)
         b = 0.1 * randint(0, 10)
         c = 0.1 * randint(0, 10)

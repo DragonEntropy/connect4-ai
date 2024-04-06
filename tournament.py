@@ -5,7 +5,7 @@ import math
 import numpy as np
 
 global params
-params = [0.2, 0.5]
+params = [0.2, 0.5, 0.1]
 
 def opponent(player):
     if player == "red":
@@ -70,9 +70,9 @@ def segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blan
 
 def count_turns(state):
     turns = 0
-    for row in state:
-        for cell in state:
-            turns += (cell != '.')
+    for i in range(state.shape[0]):
+        for j in range(state.shape[1]):
+            turns += (state[i, j] != '.')
     return turns
 
 def count_wins(state, is_red):
@@ -883,8 +883,9 @@ def connect_four(contents, turn, *args):
     move_index_order = [3, 2, 4, 1, 5, 0, 6]
     
     global params
-    if len(*args) == 3:
-        params = list(*args)
+    if args:
+        if len(*args) == 3:
+            params = list(*args)
 
     # Using a stack to implement recursion. Needs to track:
     #   The path along the DFS search
@@ -933,7 +934,7 @@ def connect_four(contents, turn, *args):
                 if util:
                     score = math.inf * (1 if (util == 'r') else -1)
                 else: 
-                    score = state_heuristic_1(current_state) + args[2] * state_heuristic_2(current_state) * (turns + current_depth + 1)
+                    score = state_heuristic_1(current_state) + params[2] * state_heuristic_2(current_state) * (turns + current_depth + 1)
                 score *= (1 if (turn == "red") else -1)
 
                 # store old_score and score: two given states comparing instead of comparing all 7 states at the end
