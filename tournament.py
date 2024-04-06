@@ -65,7 +65,7 @@ def segment_heuristic(segment_len, tokens_count, edges_count, blanks_count, blan
     return (1.5*tokens_count + blanks_count) * blanks_set_up_factor * token_edge_factor
 
 # TODO: optimise traversals 
-def state_heuristic(state: np.matrix, player: str): 
+def state_heuristic(state: np.matrix): 
 
     # red counts - store separately for purpose of analysing our heuristic
     red_row_heuristic_sum = 0
@@ -723,14 +723,7 @@ def state_heuristic(state: np.matrix, player: str):
     red_total_heuristic = red_row_heuristic_sum + red_col_heuristic_sum + red_pos_diag_heuristic_sum + red_neg_diag_heuristic_sum
     yel_total_heuristic = yel_row_heuristic_sum + yel_col_heuristic_sum + yel_pos_diag_heuristic_sum + yel_neg_diag_heuristic_sum
 
-    # calculate state heuristic according to player & return
-    if player == "red":
-        state_heuristic = red_total_heuristic - yel_total_heuristic
-    elif player == "yellow":
-        state_heuristic =  yel_total_heuristic - red_total_heuristic
-    else:
-        print("Invalid player colour: must be yellow or red")
-        return        
+    state_heuristic = red_total_heuristic - yel_total_heuristic
     return state_heuristic
 
 def evaluation(state, last_col):
@@ -884,7 +877,7 @@ def connect_four(contents, turn):
                 if util:
                     score = math.inf * (1 if (util == 'r') else -1)
                 else: 
-                    score = state_heuristic(current_state, turn)
+                    score = state_heuristic(current_state)
                 score *= (1 if (turn == "red") else -1)
 
                 # store old_score and score: two given states comparing instead of comparing all 7 states at the end
