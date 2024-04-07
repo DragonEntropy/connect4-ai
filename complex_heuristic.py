@@ -3,9 +3,10 @@
 import sys
 import math
 import numpy as np
+import time
 
 global params
-params = [0.2, 0.5, 0.1]
+params = [0.2, 0.5]
 
 def opponent(player):
     if player == "red":
@@ -978,12 +979,15 @@ def connect_four(contents, turn, *args):
     return best_choice
 
 if __name__ == '__main__':
+    start = time.time()
     if len(sys.argv) <= 1:
         # You can modify these values to test your code
-        board = '.ryyrry,.rryry.,..y.r..,..y....,.......,.......'
+        board = 'y..rr..,y......,.......,.......,.......,.......'
         # board = '.......,.......,.......,.......,.......,.......'
         player = 'yellow'
     else:
         board = sys.argv[1]
         player = sys.argv[2]
     print(connect_four(board, player))
+    end = time.time()
+    print(f"{end - start} seconds elapsed")

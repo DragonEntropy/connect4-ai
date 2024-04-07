@@ -3,9 +3,10 @@
 import sys
 import math
 import numpy as np
+import time
 
 global params
-params = [0.2, 0.5, 0.1]
+params = [0.9, 0.9, 0.6, 4]
 
 def opponent(player):
     if player == "red":
@@ -877,15 +878,17 @@ def remove_piece(state, col):
     return False
 
 def connect_four(contents, turn, *args):
-    max_depth = 5
+    start_time = time.time()
     current_state = decode(contents)
     turns = count_turns(current_state)
     move_index_order = [3, 2, 4, 1, 5, 0, 6]
     
     global params
     if args:
-        if len(*args) == 3:
+        if len(*args) == 4:
             params = list(*args)
+    
+    max_depth = params[3]
 
     # Using a stack to implement recursion. Needs to track:
     #   The path along the DFS search
@@ -934,7 +937,8 @@ def connect_four(contents, turn, *args):
                 if util:
                     score = math.inf * (1 if (util == 'r') else -1)
                 else: 
-                    score = state_heuristic_1(current_state) + params[2] * state_heuristic_2(current_state) * (turns + current_depth + 1)
+                    score = state_heuristic_1(current_state)
+                    # score = state_heuristic_1(current_state) + params[2] * state_heuristic_2(current_state) * (turns + current_depth + 1)
                 score *= (1 if (turn == "red") else -1)
 
                 # store old_score and score: two given states comparing instead of comparing all 7 states at the end
@@ -988,12 +992,13 @@ def connect_four(contents, turn, *args):
 
     nodes_examined += 1 
     #print(f"Score: {scores_stack[0]}, Nodes: {nodes_examined}")
+    print(f"Time taken: {time.time() - start_time}")
     return best_choice
 
 if __name__ == '__main__':
     if len(sys.argv) <= 1:
         # You can modify these values to test your code
-        board = '.ryyrry,.rryry.,..y.r..,..y....,.......,.......'
+        board = '.yrryy.,.r.yr..,.y.ry..,...y...,...r...,...r...'
         # board = '.......,.......,.......,.......,.......,.......'
         player = 'yellow'
     else:
