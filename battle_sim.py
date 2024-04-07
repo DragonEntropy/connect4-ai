@@ -46,7 +46,7 @@ def run_simulation(model_1, model_2, board_output=False, current_board='.......,
 
         if board_output:
             print_board(current_state)
-            print(current_board)
+            # print(current_board)
         current_board = encode(current_state)
         single_counts, total_counts = count_consecutive_pieces(current_state)
         turn_number += 1
@@ -100,9 +100,9 @@ def generate_players():
     return players
 
 if __name__ == "__main__":
-    #model_1 = Model(simple, "baseline")
-    #model_2 = Model(complex, "complex", 0.3, 0.4)
-    #run_simulation(model_1, model_2, board_output=True)
+    model_1 = Model(challenger, "challenger")
+    model_2 = Model(simple, "simple")
+    run_simulation(model_1, model_2, board_output=True)
 
-    players = generate_players()
-    run_tournament(players)
+    #players = generate_players()
+    #run_tournament(players)
